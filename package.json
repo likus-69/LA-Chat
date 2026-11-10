@@ -1,0 +1,24 @@
+{
+  "name": "la-chat",
+  "version": "0.1.0",
+  "private": true,
+  "description": "LA Chat — secure school communication platform for Light Academy Secondary School.",
+  "license": "MIT",
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "install:all": "pnpm install",
+    "build": "pnpm -r --filter=@la-chat/shared-types build && pnpm -r --filter=@la-chat/validation build && pnpm -r --filter=@la-chat/api build && pnpm -r --filter=@la-chat/web build",
+    "dev:api": "pnpm --filter @la-chat/api dev",
+    "dev:web": "pnpm --filter @la-chat/web dev",
+    "lint": "pnpm -r --parallel lint",
+    "typecheck": "pnpm -r --parallel typecheck",
+    "test": "pnpm -r --parallel test",
+    "migrate": "pnpm --filter @la-chat/api prisma:migrate",
+    "migrate:deploy": "pnpm --filter @la-chat/api prisma:migrate:deploy",
+    "seed": "pnpm --filter @la-chat/api prisma:seed",
+    "studio": "pnpm --filter @la-chat/api prisma:studio"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

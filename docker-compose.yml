@@ -1,0 +1,69 @@
+# LA Chat — local development compose
+# Brings up Postgres, Redis, MinIO, the API and the web app for local dev.
+# Production deployment uses infrastructure/school-server/ instead.
+#
+# Usage:
+#   docker compose up -d
+#   pnpm -w migrate
+#   pnpm -w seed
+#   pnpm -w dev:api
+#   pnpm -w dev:web
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-la_chat}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_in_prod}
+      POSTGRES_DB: ${POSTGRES_DB:-la_chat}
+    ports:
+      - "5432:5432"
+    volumes:
+      - la_chat_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-la_chat} -d ${POSTGRES_DB:-la_chat}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - la_chat_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-la_chat_minio}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:-change_me_in_prod}
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # web console
+    volumes:
+      - la_chat_minio:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # The API and web app are run via `pnpm dev` during development so you get
+  # hot-reload. They are NOT started by compose in dev mode. For a production
+  # build, see infrastructure/docker/Dockerfile.api and Dockerfile.web, and
+  # the school-server compose file (planned for Phase 8).
+
+volumes:
+  la_chat_db:
+  la_chat_redis:
+  la_chat_minio:

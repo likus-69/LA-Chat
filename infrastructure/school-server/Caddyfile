@@ -1,0 +1,57 @@
+# LA Chat — Caddyfile template for the school server.
+# Replace chat.lightacademy.sc.ug and api.lightacademy.sc.ug with the real
+# domain, and point the reverse_proxy lines at the right internal addresses.
+#
+# Caddy obtains and renews Let's Encrypt certificates automatically when the
+# domain resolves to this server and port 80/443 are reachable from the
+# internet. No manual cert steps needed.
+
+{
+    # Global options
+    email ict@lightacademy.sc.ug
+    # HSTS
+    servers {
+        timeouts {
+            read_body 30s
+            read_header 10s
+            write 30s
+            idle 2m
+        }
+    }
+}
+
+# Web app
+chat.lightacademy.sc.ug {
+    encode gzip zstd
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "geolocation=(), microphone=(), camera=()"
+    }
+    reverse_proxy 127.0.0.1:3000
+}
+
+# API
+api.lightacademy.sc.ug {
+    encode gzip zstd
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+    # Rate limit login and register at the edge (in addition to the in-app
+    # ThrottleGuard) using Caddy's rate_limit module. See
+    # https://caddyserver.com/docs/modules/http.handlers.rate_limit
+    @auth path /api/v1/auth/login /api/v1/auth/register/*
+    rate_limit @auth {
+        zone auth {
+            key {remote_host}
+            events 10
+            window 1m
+        }
+    }
+    reverse_proxy 127.0.0.1:4000
+}

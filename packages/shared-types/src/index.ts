@@ -1,0 +1,315 @@
+/**
+ * @la-chat/shared-types
+ *
+ * Runtime-free DTOs, enums and API contracts shared across web, mobile and API.
+ * No Node-only APIs. Safe to import in browsers, React Native and Node.
+ */
+
+// ---------------------------------------------------------------------------
+// Roles
+// ---------------------------------------------------------------------------
+
+export enum RoleName {
+  STUDENT = 'STUDENT',
+  TEACHER = 'TEACHER',
+  CLASS_TEACHER = 'CLASS_TEACHER',
+  HEADTEACHER = 'HEADTEACHER',
+  DEPUTY_HEADTEACHER = 'DEPUTY_HEADTEACHER',
+  SCHOOL_ADMINISTRATOR = 'SCHOOL_ADMINISTRATOR',
+  ICT_ADMINISTRATOR = 'ICT_ADMINISTRATOR',
+  SCHOOL_SECRETARY = 'SCHOOL_SECRETARY',
+  PARENT_GUARDIAN = 'PARENT_GUARDIAN',
+}
+
+export const ALL_ROLES: RoleName[] = Object.values(RoleName);
+
+// ---------------------------------------------------------------------------
+// Permissions
+// ---------------------------------------------------------------------------
+
+export enum Permission {
+  // Users
+  USER_CREATE = 'user.create',
+  USER_READ_SELF = 'user.read.self',
+  USER_READ_STUDENTS = 'user.read.students',
+  USER_READ_STAFF = 'user.read.staff',
+  USER_UPDATE_SELF = 'user.update.self',
+  USER_UPDATE_OTHERS = 'user.update.others',
+  USER_SUSPEND = 'user.suspend',
+  USER_RESTORE = 'user.restore',
+  USER_RESET_PASSWORD = 'user.reset_password',
+  USER_IMPORT_CSV = 'user.import_csv',
+  USER_EXPORT_CSV = 'user.export_csv',
+  // Academic
+  CLASS_MANAGE = 'class.manage',
+  SUBJECT_MANAGE = 'subject.manage',
+  ENROLMENT_MANAGE = 'enrolment.manage',
+  // Messaging
+  CONVERSATION_CREATE_PRIVATE = 'conversation.create.private',
+  CONVERSATION_CREATE_GROUP = 'conversation.create.group',
+  CONVERSATION_MANAGE_GROUP = 'conversation.manage.group',
+  CONVERSATION_ADD_MEMBERS = 'conversation.add_members',
+  CONVERSATION_REMOVE_MEMBERS = 'conversation.remove_members',
+  CONVERSATION_PIN_MESSAGE = 'conversation.pin_message',
+  MESSAGE_SEND = 'message.send',
+  MESSAGE_EDIT_SELF = 'message.edit.self',
+  MESSAGE_DELETE_SELF = 'message.delete.self',
+  MESSAGE_DELETE_OTHERS = 'message.delete.others',
+  MESSAGE_SEARCH = 'message.search',
+  // Announcements
+  ANNOUNCEMENT_PUBLISH_CLASS = 'announcement.publish.class',
+  ANNOUNCEMENT_PUBLISH_STREAM = 'announcement.publish.stream',
+  ANNOUNCEMENT_PUBLISH_STAFF = 'announcement.publish.staff',
+  ANNOUNCEMENT_PUBLISH_SCHOOL = 'announcement.publish.school',
+  ANNOUNCEMENT_PUBLISH_ADMIN = 'announcement.publish.admin',
+  ANNOUNCEMENT_DELETE = 'announcement.delete',
+  // Moderation
+  REPORT_CREATE = 'report.create',
+  REPORT_REVIEW = 'report.review',
+  MODERATION_ACCESS_PRIVATE = 'moderation.access_private',
+  // System
+  SYSTEM_SETTINGS = 'system.settings',
+  SYSTEM_AUDIT_READ = 'system.audit.read',
+  SYSTEM_BACKUP_MANAGE = 'system.backup.manage',
+  SYSTEM_DB_MAINTAIN = 'system.db.maintain',
+  SYSTEM_DEPLOY = 'system.deploy',
+}
+
+/**
+ * The canonical role → permission map. Mirror of
+ * documentation/security/permissions-matrix.md. The API loads this at
+ * bootstrap to seed the `role_permissions` table.
+ */
+export const ROLE_PERMISSIONS: Record<RoleName, Permission[]> = {
+  [RoleName.STUDENT]: [
+    Permission.USER_READ_SELF,
+    Permission.USER_UPDATE_SELF,
+    Permission.CONVERSATION_CREATE_PRIVATE,
+    Permission.MESSAGE_SEND,
+    Permission.MESSAGE_EDIT_SELF,
+    Permission.MESSAGE_DELETE_SELF,
+    Permission.MESSAGE_SEARCH,
+    Permission.REPORT_CREATE,
+  ],
+  [RoleName.TEACHER]: [
+    Permission.USER_READ_SELF,
+    Permission.USER_UPDATE_SELF,
+    Permission.USER_READ_STUDENTS,
+    Permission.CONVERSATION_CREATE_PRIVATE,
+    Permission.CONVERSATION_CREATE_GROUP,
+    Permission.CONVERSATION_MANAGE_GROUP,
+    Permission.CONVERSATION_ADD_MEMBERS,
+    Permission.CONVERSATION_REMOVE_MEMBERS,
+    Permission.CONVERSATION_PIN_MESSAGE,
+    Permission.MESSAGE_SEND,
+    Permission.MESSAGE_EDIT_SELF,
+    Permission.MESSAGE_DELETE_SELF,
+    Permission.MESSAGE_SEARCH,
+    Permission.ANNOUNCEMENT_PUBLISH_CLASS,
+    Permission.ANNOUNCEMENT_PUBLISH_STREAM,
+    Permission.ANNOUNCEMENT_DELETE,
+    Permission.REPORT_CREATE,
+  ],
+  [RoleName.CLASS_TEACHER]: [
+    Permission.USER_READ_SELF,
+    Permission.USER_UPDATE_SELF,
+    Permission.USER_READ_STUDENTS,
+    Permission.CONVERSATION_CREATE_PRIVATE,
+    Permission.CONVERSATION_CREATE_GROUP,
+    Permission.CONVERSATION_MANAGE_GROUP,
+    Permission.CONVERSATION_ADD_MEMBERS,
+    Permission.CONVERSATION_REMOVE_MEMBERS,
+    Permission.CONVERSATION_PIN_MESSAGE,
+    Permission.MESSAGE_SEND,
+    Permission.MESSAGE_EDIT_SELF,
+    Permission.MESSAGE_DELETE_SELF,
+    Permission.MESSAGE_SEARCH,
+    Permission.ANNOUNCEMENT_PUBLISH_CLASS,
+    Permission.ANNOUNCEMENT_PUBLISH_STREAM,
+    Permission.ANNOUNCEMENT_DELETE,
+    Permission.REPORT_CREATE,
+  ],
+  [RoleName.HEADTEACHER]: [
+    Permission.USER_READ_SELF,
+    Permission.USER_UPDATE_SELF,
+    Permission.USER_READ_STUDENTS,
+    Permission.USER_READ_STAFF,
+    Permission.USER_EXPORT_CSV,
+    Permission.CONVERSATION_CREATE_PRIVATE,
+    Permission.CONVERSATION_CREATE_GROUP,
+    Permission.CONVERSATION_MANAGE_GROUP,
+    Permission.CONVERSATION_ADD_MEMBERS,
+    Permission.CONVERSATION_REMOVE_MEMBERS,
+    Permission.CONVERSATION_PIN_MESSAGE,
+    Permission.MESSAGE_SEND,
+    Permission.MESSAGE_EDIT_SELF,
+    Permission.MESSAGE_DELETE_SELF,
+    Permission.MESSAGE_SEARCH,
+    Permission.ANNOUNCEMENT_PUBLISH_CLASS,
+    Permission.ANNOUNCEMENT_PUBLISH_STREAM,
+    Permission.ANNOUNCEMENT_PUBLISH_STAFF,
+    Permission.ANNOUNCEMENT_PUBLISH_SCHOOL,
+    Permission.ANNOUNCEMENT_PUBLISH_ADMIN,
+    Permission.ANNOUNCEMENT_DELETE,
+    Permission.REPORT_CREATE,
+  ],
+  [RoleName.DEPUTY_HEADTEACHER]: [
+    Permission.USER_READ_SELF,
+    Permission.USER_UPDATE_SELF,
+    Permission.USER_READ_STUDENTS,
+    Permission.USER_READ_STAFF,
+    Permission.CONVERSATION_CREATE_PRIVATE,
+    Permission.MESSAGE_SEND,
+    Permission.MESSAGE_EDIT_SELF,
+    Permission.MESSAGE_DELETE_SELF,
+    Permission.MESSAGE_SEARCH,
+    Permission.ANNOUNCEMENT_PUBLISH_CLASS,
+    Permission.ANNOUNCEMENT_PUBLISH_STREAM,
+    Permission.ANNOUNCEMENT_PUBLISH_STAFF,
+    Permission.ANNOUNCEMENT_PUBLISH_ADMIN,
+    Permission.ANNOUNCEMENT_DELETE,
+    Permission.REPORT_CREATE,
+  ],
+  [RoleName.SCHOOL_ADMINISTRATOR]: [
+    Permission.USER_READ_SELF,
+    Permission.USER_UPDATE_SELF,
+    Permission.USER_READ_STUDENTS,
+    Permission.USER_READ_STAFF,
+    Permission.USER_CREATE,
+    Permission.USER_UPDATE_OTHERS,
+    Permission.USER_SUSPEND,
+    Permission.USER_RESTORE,
+    Permission.USER_RESET_PASSWORD,
+    Permission.USER_IMPORT_CSV,
+    Permission.USER_EXPORT_CSV,
+    Permission.CLASS_MANAGE,
+    Permission.SUBJECT_MANAGE,
+    Permission.ENROLMENT_MANAGE,
+    Permission.CONVERSATION_CREATE_GROUP,
+    Permission.CONVERSATION_MANAGE_GROUP,
+    Permission.CONVERSATION_ADD_MEMBERS,
+    Permission.CONVERSATION_REMOVE_MEMBERS,
+    Permission.CONVERSATION_PIN_MESSAGE,
+    Permission.MESSAGE_SEND,
+    Permission.MESSAGE_EDIT_SELF,
+    Permission.MESSAGE_DELETE_SELF,
+    Permission.ANNOUNCEMENT_PUBLISH_ADMIN,
+    Permission.ANNOUNCEMENT_DELETE,
+    Permission.REPORT_CREATE,
+  ],
+  [RoleName.ICT_ADMINISTRATOR]: [
+    Permission.USER_READ_SELF,
+    Permission.USER_UPDATE_SELF,
+    Permission.SYSTEM_SETTINGS,
+    Permission.SYSTEM_AUDIT_READ,
+    Permission.SYSTEM_BACKUP_MANAGE,
+    Permission.SYSTEM_DB_MAINTAIN,
+    Permission.SYSTEM_DEPLOY,
+    Permission.REPORT_CREATE,
+  ],
+  [RoleName.SCHOOL_SECRETARY]: [
+    Permission.USER_READ_SELF,
+    Permission.USER_UPDATE_SELF,
+    Permission.CONVERSATION_CREATE_PRIVATE,
+    Permission.CONVERSATION_CREATE_GROUP,
+    Permission.CONVERSATION_MANAGE_GROUP,
+    Permission.CONVERSATION_ADD_MEMBERS,
+    Permission.CONVERSATION_REMOVE_MEMBERS,
+    Permission.CONVERSATION_PIN_MESSAGE,
+    Permission.MESSAGE_SEND,
+    Permission.MESSAGE_EDIT_SELF,
+    Permission.MESSAGE_DELETE_SELF,
+    Permission.MESSAGE_SEARCH,
+    Permission.ANNOUNCEMENT_PUBLISH_ADMIN,
+    Permission.ANNOUNCEMENT_DELETE,
+    Permission.REPORT_CREATE,
+  ],
+  [RoleName.PARENT_GUARDIAN]: [
+    Permission.USER_READ_SELF,
+    Permission.USER_UPDATE_SELF,
+    Permission.CONVERSATION_CREATE_PRIVATE,
+    Permission.MESSAGE_SEND,
+    Permission.MESSAGE_EDIT_SELF,
+    Permission.MESSAGE_DELETE_SELF,
+    Permission.MESSAGE_SEARCH,
+    Permission.REPORT_CREATE,
+  ],
+};
+
+// ---------------------------------------------------------------------------
+// Account status
+// ---------------------------------------------------------------------------
+
+export enum AccountStatus {
+  PENDING = 'PENDING',
+  ACTIVE = 'ACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  DELETED = 'DELETED',
+}
+
+// ---------------------------------------------------------------------------
+// User DTOs
+// ---------------------------------------------------------------------------
+
+export interface UserSummaryDto {
+  id: string;
+  fullName: string;
+  email: string | null;
+  phone: string | null;
+  roles: RoleName[];
+  status: AccountStatus;
+}
+
+export interface UserProfileDto extends UserSummaryDto {
+  createdAt: string;
+  admissionNo?: string | null;
+  staffNo?: string | null;
+  department?: string | null;
+  className?: string | null;
+  streamName?: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Auth DTOs
+// ---------------------------------------------------------------------------
+
+export interface RegisterStudentDto {
+  admissionNo: string;
+  fullName: string;
+  email?: string;
+  phone?: string;
+  password: string;
+  classId: string;
+  streamId: string;
+}
+
+export interface RegisterStaffDto {
+  staffNo: string;
+  fullName: string;
+  email?: string;
+  phone?: string;
+  password: string;
+  department?: string;
+  role: RoleName;
+}
+
+export interface LoginDto {
+  identifier: string;
+  password: string;
+  deviceId?: string;
+}
+
+export interface AuthTokensDto {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
+export interface AuthResponseDto {
+  user: UserProfileDto;
+  tokens: AuthTokensDto;
+}
+
+export interface RefreshDto {
+  refreshToken: string;
+}

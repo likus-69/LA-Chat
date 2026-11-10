@@ -1,0 +1,695 @@
+// =============================================================================
+// LA Chat — Prisma schema (source of truth)
+// Mirror of documentation/architecture/erd.md
+// =============================================================================
+// Generator + datasource
+// =============================================================================
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// Enums
+// =============================================================================
+
+enum RoleName {
+  STUDENT
+  TEACHER
+  CLASS_TEACHER
+  HEADTEACHER
+  DEPUTY_HEADTEACHER
+  SCHOOL_ADMINISTRATOR
+  ICT_ADMINISTRATOR
+  SCHOOL_SECRETARY
+  PARENT_GUARDIAN
+}
+
+enum AccountStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum UserDevicePlatform {
+  WEB
+  ANDROID
+  IOS
+}
+
+enum ConversationType {
+  PRIVATE
+  GROUP
+}
+
+enum ConversationParticipantRole {
+  MEMBER
+  ADMIN
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  VIDEO
+  AUDIO
+  VOICE
+  DOCUMENT
+  SYSTEM
+}
+
+enum GroupType {
+  CLASS
+  STREAM
+  SUBJECT
+  DEPARTMENT
+  CLUB
+  ADMIN
+  PARENT
+}
+
+enum GroupMemberRole {
+  MEMBER
+  ADMIN
+}
+
+enum AnnouncementCategory {
+  SCHOOL_WIDE
+  CLASS
+  EXAM
+  TIMETABLE
+  ACADEMIC
+  EVENT
+  EMERGENCY
+  ADMINISTRATIVE
+}
+
+enum AnnouncementPriority {
+  LOW
+  NORMAL
+  HIGH
+  CRITICAL
+}
+
+enum AnnouncementAudience {
+  ALL
+  CLASS
+  STREAM
+  STAFF
+  PARENTS
+}
+
+enum ReportCategory {
+  BULLYING
+  INAPPROPRIATE
+  SPAM
+  IMPERSONATION
+  THREAT
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+enum ModerationActionType {
+  WARN
+  REMOVE_MESSAGE
+  SUSPEND_ACCOUNT
+  DISMISS
+}
+
+enum MessageDeliveryState {
+  SENT
+  DELIVERED
+  READ
+}
+
+enum BackupKind {
+  DB
+  FILES
+}
+
+enum BackupStatus {
+  RUNNING
+  SUCCESS
+  FAILED
+}
+
+// =============================================================================
+// Identity & access
+// =============================================================================
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String?  @unique @db.Citext
+  phone        String?  @unique
+  fullName     String   @map("full_name")
+  passwordHash String   @map("password_hash")
+  mfaSecret    String?  @map("mfa_secret")
+  status       AccountStatus @default(PENDING)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  roles               UserRole[]
+  sessions            UserSession[]
+  devices             UserDevice[]
+  studentProfile      StudentProfile?
+  staffProfile        StaffProfile?
+  parentProfile       ParentProfile?
+  sentMessages        Message[]              @relation("MessageSender")
+  receivedDelivery    MessageDeliveryStatus[]
+  conversationParts   ConversationParticipant[]
+  groupMemberships    GroupMember[]
+  teacherAssignments  TeacherAssignment[]
+  authoredAnnouncements Announcement[]
+  announcementAcks    AnnouncementAcknowledgement[]
+  reportsFiled        Report[]               @relation("ReportReporter")
+  reportsAgainst      Report[]               @relation("ReportSubject")
+  moderationActions   ModerationAction[]
+  moderationAccess    ModerationAccessLog[]
+  messageReactions    MessageReaction[]
+  messageReadReceipts MessageReadReceipt[]
+  notifications       Notification[]
+  auditLogsActor      AuditLog[]             @relation("AuditActor")
+  auditLogsTarget     AuditLog[]             @relation("AuditTarget")
+
+  @@map("users")
+  @@index([status])
+  @@index([fullName])
+}
+
+model Role {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        RoleName @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  users       UserRole[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id        String   @id @default(uuid()) @db.Uuid
+  code      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  roles     RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String     @map("role_id")
+  permissionId String     @map("permission_id")
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  userId    String   @map("user_id")
+  roleId    String   @map("role_id")
+  grantedBy String?  @map("granted_by") @db.Uuid
+  grantedAt DateTime @default(now()) @map("granted_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model UserSession {
+  id               String    @id @default(uuid()) @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
+  refreshTokenHash String    @unique @map("refresh_token_hash")
+  deviceId         String?   @map("device_id") @db.Uuid
+  ipAddress        String?   @map("ip_address")
+  userAgent        String?   @map("user_agent")
+  expiresAt        DateTime  @map("expires_at")
+  revokedAt        DateTime? @map("revoked_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device UserDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("user_sessions")
+}
+
+model UserDevice {
+  id         String           @id @default(uuid()) @db.Uuid
+  userId     String           @map("user_id") @db.Uuid
+  platform   UserDevicePlatform
+  pushToken  String?          @map("push_token")
+  label      String?
+  lastSeenAt DateTime         @default(now()) @map("last_seen_at")
+  createdAt  DateTime         @default(now()) @map("created_at")
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessions UserSession[]
+
+  @@unique([userId, platform, pushToken])
+  @@index([userId])
+  @@map("devices")
+}
+
+// =============================================================================
+// Profiles
+// =============================================================================
+
+model StudentProfile {
+  userId       String   @id @map("user_id") @db.Uuid
+  admissionNo  String   @unique @map("admission_no")
+  classId      String   @map("class_id") @db.Uuid
+  streamId     String   @map("stream_id") @db.Uuid
+  guardianId   String?  @map("guardian_id") @db.Uuid
+  enrolledAt   DateTime @default(now()) @map("enrolled_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class   Class      @relation(fields: [classId], references: [id])
+  stream  Stream     @relation(fields: [streamId], references: [id])
+  guardian ParentProfile? @relation(fields: [guardianId], references: [userId], onDelete: SetNull)
+
+  @@map("student_profiles")
+}
+
+model StaffProfile {
+  userId     String   @id @map("user_id") @db.Uuid
+  staffNo    String   @unique @map("staff_no")
+  department String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("staff_profiles")
+}
+
+model ParentProfile {
+  userId      String   @id @map("user_id") @db.Uuid
+  childId     String   @map("child_id") @db.Uuid
+  relationship String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  children StudentProfile[]
+
+  @@map("parent_profiles")
+}
+
+// =============================================================================
+// Academic
+// =============================================================================
+
+model Class {
+  id        String   @id @default(uuid()) @db.Uuid
+  level     Int      // 1..6 (S1..S6)
+  name      String   // "Senior One"
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  streams   Stream[]
+  students  StudentProfile[]
+  teachers  TeacherAssignment[]
+
+  @@unique([level, name])
+  @@map("classes")
+}
+
+model Stream {
+  id        String   @id @default(uuid()) @db.Uuid
+  classId   String   @map("class_id") @db.Uuid
+  name      String   // "East", "West"
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  students  StudentProfile[]
+  teacherAssignments TeacherAssignment[]
+
+  @@unique([classId, name])
+  @@map("streams")
+}
+
+model Subject {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  code      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  teachers TeacherAssignment[]
+
+  @@map("subjects")
+}
+
+model TeacherAssignment {
+  id           String   @id @default(uuid()) @db.Uuid
+  teacherId    String   @map("teacher_id") @db.Uuid
+  subjectId    String   @map("subject_id") @db.Uuid
+  classId      String   @map("class_id") @db.Uuid
+  streamId     String?  @map("stream_id") @db.Uuid
+  academicYear String   @map("academic_year")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  teacher User    @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  class   Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  stream  Stream? @relation(fields: [streamId], references: [id], onDelete: SetNull)
+
+  @@unique([teacherId, subjectId, classId, streamId, academicYear])
+  @@map("teacher_assignments")
+}
+
+// =============================================================================
+// Messaging
+// =============================================================================
+
+model Conversation {
+  id            String           @id @default(uuid()) @db.Uuid
+  type          ConversationType
+  lastMessageAt DateTime?        @map("last_message_at")
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  participants  ConversationParticipant[]
+  messages      Message[]
+  readReceipts  MessageReadReceipt[]
+  group         Group?
+
+  @@index([lastMessageAt])
+  @@map("conversations")
+}
+
+model ConversationParticipant {
+  conversationId String   @map("conversation_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  role           ConversationParticipantRole @default(MEMBER)
+  joinedAt       DateTime @default(now()) @map("joined_at")
+  leftAt         DateTime? @map("left_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+  @@index([userId])
+  @@map("conversation_participants")
+}
+
+model Message {
+  id              String     @id @default(uuid()) @db.Uuid
+  conversationId  String     @map("conversation_id") @db.Uuid
+  senderId        String     @map("sender_id") @db.Uuid
+  clientMessageId String     @map("client_message_id")
+  type            MessageType @default(TEXT)
+  body            String?
+  replyToId       String?    @map("reply_to_id") @db.Uuid
+  editedAt        DateTime?  @map("edited_at")
+  deletedAt       DateTime?  @map("deleted_at")
+  createdAt       DateTime   @default(now()) @map("created_at")
+
+  conversation Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User          @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  replyTo      Message?      @relation("MessageReply", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies      Message[]     @relation("MessageReply")
+  attachments  MessageAttachment[]
+  reactions    MessageReaction[]
+  delivery     MessageDeliveryStatus[]
+  readReceipts MessageReadReceipt[]
+
+  @@unique([conversationId, clientMessageId])
+  @@index([conversationId, createdAt])
+  @@index([senderId, createdAt])
+  @@map("messages")
+}
+
+model MessageAttachment {
+  id          String   @id @default(uuid()) @db.Uuid
+  messageId   String   @map("message_id") @db.Uuid
+  storageKey  String   @map("storage_key")
+  filename    String
+  mimeType    String   @map("mime_type")
+  sizeBytes   Int      @map("size_bytes")
+  widthPx     Int?     @map("width_px")
+  heightPx    Int?     @map("height_px")
+  durationSec Int?     @map("duration_sec")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@map("message_attachments")
+}
+
+model MessageReaction {
+  messageId String   @map("message_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  emoji     String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([messageId, userId, emoji])
+  @@map("message_reactions")
+}
+
+model MessageReadReceipt {
+  conversationId    String   @map("conversation_id") @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  lastReadMessageId String   @map("last_read_message_id") @db.Uuid
+  lastReadAt        DateTime @default(now()) @map("last_read_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message      Message      @relation(fields: [lastReadMessageId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+  @@map("message_read_receipts")
+}
+
+model MessageDeliveryStatus {
+  messageId   String              @id @default(uuid()) @db.Uuid
+  recipientId String              @map("recipient_id") @db.Uuid
+  state       MessageDeliveryState @default(SENT)
+  at          DateTime            @default(now())
+
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  recipient User    @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, recipientId])
+  @@index([recipientId, state])
+  @@map("message_delivery_status")
+}
+
+// =============================================================================
+// Groups
+// =============================================================================
+
+model Group {
+  id             String    @id @default(uuid()) @db.Uuid
+  type           GroupType
+  name           String
+  description    String?
+  conversationId String?   @unique @map("conversation_id") @db.Uuid
+  createdBy      String    @map("created_by") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  members      GroupMember[]
+
+  @@index([type])
+  @@map("groups")
+}
+
+model GroupMember {
+  groupId  String          @id @default(uuid()) @db.Uuid
+  userId   String          @map("user_id") @db.Uuid
+  role     GroupMemberRole @default(MEMBER)
+  addedBy  String?         @map("added_by") @db.Uuid
+  addedAt  DateTime        @default(now()) @map("added_at")
+  removedAt DateTime?      @map("removed_at")
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([userId])
+  @@map("group_members")
+}
+
+// =============================================================================
+// School communications
+// =============================================================================
+
+model Announcement {
+  id          String               @id @default(uuid()) @db.Uuid
+  authorId    String               @map("author_id") @db.Uuid
+  category    AnnouncementCategory
+  priority    AnnouncementPriority @default(NORMAL)
+  audience    AnnouncementAudience
+  title       String
+  body        String
+  publishedAt DateTime             @default(now()) @map("published_at")
+  expiresAt   DateTime?            @map("expires_at")
+  deletedAt   DateTime?            @map("deleted_at")
+  createdAt   DateTime             @default(now()) @map("created_at")
+
+  author           User                       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  acknowledgements AnnouncementAcknowledgement[]
+
+  @@index([publishedAt])
+  @@index([audience, publishedAt])
+  @@map("announcements")
+}
+
+model AnnouncementAcknowledgement {
+  announcementId String   @map("announcement_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  acknowledgedAt DateTime @default(now()) @map("acknowledged_at")
+
+  announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([announcementId, userId])
+  @@map("announcement_acknowledgements")
+}
+
+// =============================================================================
+// Moderation & safety
+// =============================================================================
+
+model Report {
+  id               String         @id @default(uuid()) @db.Uuid
+  reporterId       String         @map("reporter_id") @db.Uuid
+  reportedUserId   String?        @map("reported_user_id") @db.Uuid
+  reportedMessageId String?       @map("reported_message_id") @db.Uuid
+  category         ReportCategory
+  reason           String
+  status           ReportStatus   @default(OPEN)
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+  resolvedAt       DateTime?      @map("resolved_at")
+
+  reporter     User               @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedUser User?              @relation("ReportSubject", fields: [reportedUserId], references: [id], onDelete: SetNull)
+  actions      ModerationAction[]
+
+  @@index([status, createdAt])
+  @@map("reports")
+}
+
+model ModerationAction {
+  id           String           @id @default(uuid()) @db.Uuid
+  reportId     String           @map("report_id") @db.Uuid
+  moderatorId  String           @map("moderator_id") @db.Uuid
+  action       ModerationActionType
+  note         String?
+  createdAt    DateTime         @default(now()) @map("created_at")
+
+  report    Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  moderator User   @relation(fields: [moderatorId], references: [id], onDelete: Cascade)
+
+  @@index([reportId])
+  @@map("moderation_actions")
+}
+
+/// Append-only: every time a moderator opens a private message, a row is
+/// written here with a reason. Visible to Headteacher + ICT Administrator.
+model ModerationAccessLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  moderatorId  String   @map("moderator_id") @db.Uuid
+  messageId    String   @map("message_id") @db.Uuid
+  reason       String
+  openedAt     DateTime @default(now()) @map("opened_at")
+
+  moderator User @relation(fields: [moderatorId], references: [id], onDelete: Cascade)
+  /// Message relation is intentionally not enforced via FK to keep the
+  /// table append-only even if a message is hard-deleted.
+
+  @@index([moderatorId, openedAt])
+  @@map("moderation_access_log")
+}
+
+// =============================================================================
+// Operations
+// =============================================================================
+
+model Notification {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  type      String
+  payload   Json
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String?  @map("actor_id") @db.Uuid
+  action     String
+  targetType String?  @map("target_type")
+  targetId   String?  @map("target_id") @db.Uuid
+  ip         String?
+  userAgent  String?  @map("user_agent")
+  at         DateTime @default(now())
+
+  actor  User?  @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  target User?  @relation("AuditTarget", fields: [targetId], references: [id], onDelete: SetNull)
+
+  @@index([actorId, at])
+  @@index([targetType, targetId])
+  @@index([at])
+  @@map("audit_logs")
+}
+
+model SystemSetting {
+  key       String   @id
+  value     String
+  updatedBy String?  @map("updated_by") @db.Uuid
+  updatedAt DateTime @default(now()) @map("updated_at")
+
+  @@map("system_settings")
+}
+
+model BackupRecord {
+  id         String       @id @default(uuid()) @db.Uuid
+  kind       BackupKind
+  location   String
+  sizeBytes  Int          @map("size_bytes")
+  checksum   String
+  startedAt  DateTime     @default(now()) @map("started_at")
+  finishedAt DateTime?    @map("finished_at")
+  status     BackupStatus  @default(RUNNING)
+
+  @@index([kind, startedAt])
+  @@map("backup_records")
+}

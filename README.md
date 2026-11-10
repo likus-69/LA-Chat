@@ -1,59 +1,111 @@
-# LA-Chat
+# LA Chat
 
-LA-Chat is a monorepo for a multi-platform conversational application. The repository is organized to separate application code, shared libraries, infrastructure, documentation, and test assets.
+**Secure school communication platform for Light Academy Secondary School.**
+*A Different Approach to Education.*
 
-## Repository structure
+LA Chat connects students, teachers, administrators and parents of Light Academy Secondary School through a single, school-owned, auditable messaging system. It runs on a single server inside the school, with encrypted cloud backup for safety, and is reachable from Android, iOS and any web browser.
 
-```text
-la-chat/
-├── apps/
-│   ├── web/                 # Client-facing web application
-│   ├── mobile/              # Android and iOS client
-│   └── api/                 # Backend API and business logic
-├── packages/
-│   ├── shared-types/        # Shared domain and API contract types
-│   ├── validation/          # Validation utilities and schemas
-│   ├── design-system/       # Shared UI components and design tokens
-│   └── shared-utils/        # Cross-project utility helpers
-├── infrastructure/
-│   ├── docker/              # Local/container configuration
-│   ├── school-server/       # School/server deployment assets
-│   ├── cloud/               # Cloud deployment and infra-as-code
-│   └── monitoring/          # Logs, telemetry, and monitoring config
-├── database/
-│   ├── migrations/          # Database schema migrations
-│   ├── seeds/               # Seed scripts and sample data
-│   └── schema/              # ERD and schema definitions
-├── documentation/
-│   ├── architecture/        # System design and architecture docs
-│   ├── api/                 # API reference and specs
-│   ├── security/            # Security and auth docs
-│   ├── deployment/          # Deployment guides and runbooks
-│   └── user-guides/         # End-user and admin guides
-├── tests/                   # Integration, e2e, and shared test assets
-├── .env.example             # Example environment variables
-├── docker-compose.yml       # Local service orchestration
-├── LICENSE                  # License information
-├── README.md                # Project overview and onboarding
-└── .gitignore               # Git ignore rules
+> **Status:** Phase 1 + partial Phase 2 complete. See [`STATUS.md`](./STATUS.md) for what works, what is in progress, and what is still to build.
+
+---
+
+## Quick start (developer)
+
+> Requires Node 22+, pnpm 9+, Docker, and Docker Compose.
+
+```bash
+git clone https://github.com/likus-69/LA-Chat.git
+cd LA-Chat
+cp .env.example .env            # then edit secrets
+pnpm install
+docker compose up -d            # Postgres + Redis + MinIO
+pnpm -w migrate                 # create the schema
+pnpm -w seed                    # synthetic data only — no real students
+pnpm -w dev:api                 # http://localhost:4000  (Swagger at /docs)
+pnpm -w dev:web                 # http://localhost:3000  (login screen)
 ```
 
-## Getting started
+Test logins (password is `Password1` for all seed accounts):
 
-This repository is scaffolded but does not yet include the application implementation, dependencies, or runtime configuration. As each component is added, the relevant app or package should include its own setup, environment variables, and scripts.
+| Role | Identifier |
+|---|---|
+| ICT Administrator | `ict.admin@la-chat.local` |
+| School Administrator | `school.admin@la-chat.local` |
+| Headteacher | `headteacher@la-chat.local` |
+| Teacher | `teacher1@la-chat.local` |
+| Student | `student.s1e-0001@la-chat.local` |
 
-### Typical developer workflow
+---
 
-1. Copy `.env.example` to a local environment file and fill in values.
-2. Start local infrastructure with Docker Compose.
-3. Run the web, mobile, or API app in its own directory.
-4. Use the shared packages for validation, types, and UI components.
+## Repository layout
 
-## Notes
+The full layout and dependency rules are in [`documentation/architecture/repository-structure.md`](./documentation/architecture/repository-structure.md). Headline:
 
-- The monorepo is intentionally split by concern to support multiple frontend/client targets and a shared backend.
-- The structure is ready for future growth as features, services, and deployment logic are introduced.
+```
+apps/
+  api/      NestJS + Prisma + PostgreSQL — auth, users, RBAC, academic
+  web/      Next.js 15 — login, dashboard shell
+  mobile/   Expo (React Native) — Phase 7
+packages/
+  shared-types/   DTOs, enums, role→permission map (runtime-free)
+  validation/     Zod schemas (one per DTO)
+infrastructure/
+  docker/         Dockerfiles
+  school-server/  Caddyfile, backup scripts, systemd units
+database/
+  schema/         Prisma schema (canonical)
+  seeds/          synthetic seed data only
+documentation/
+  PLAN.md         executive summary + index — start here
+  architecture/   system-architecture, tech-stack, erd, repository-structure
+  security/       permissions-matrix
+  deployment/     hybrid-hosting (focus), roadmap
+```
+
+---
+
+## Documentation
+
+- **Start here:** [`documentation/PLAN.md`](./documentation/PLAN.md) — executive summary + index for both school leadership and developers.
+- **Architecture:** [`documentation/architecture/system-architecture.md`](./documentation/architecture/system-architecture.md)
+- **Database design:** [`documentation/architecture/erd.md`](./documentation/architecture/erd.md)
+- **Permissions matrix:** [`documentation/security/permissions-matrix.md`](./documentation/security/permissions-matrix.md)
+- **Hybrid hosting (focus area):** [`documentation/deployment/hybrid-hosting.md`](./documentation/deployment/hybrid-hosting.md)
+- **Roadmap:** [`documentation/deployment/roadmap.md`](./documentation/deployment/roadmap.md)
+- **Live status:** [`STATUS.md`](./STATUS.md)
+
+---
+
+## What works today (Phase 1 + partial Phase 2)
+
+- ✅ Working NestJS API with PostgreSQL, Prisma, JWT auth, refresh-token rotation, role-based access control with 9 roles + Parent/Guardian, and the full normalised schema (26 tables).
+- ✅ Account registration for students (admission no) and staff (staff no), with approval workflow and suspend/restore.
+- ✅ Academic structure CRUD: classes (S1–S6), streams, subjects.
+- ✅ Next.js web shell with branded login screen, token storage, refresh-on-401, and a stub dashboard showing the authenticated user's profile and roles.
+- ✅ Docker Compose for Postgres + Redis + MinIO.
+- ✅ Swagger UI at `/docs`.
+- ✅ Unit tests for the validation layer.
+
+## What is not yet done
+
+- ⏳ Real-time messaging, groups, media, voice (Phases 3–4).
+- ⏳ Mobile apps (Phase 7).
+- ⏳ Moderation queue UI, audit log UI (Phase 6).
+- ⏳ Push notifications (Phase 4).
+- ⏳ Production deployment runbook + staging environment (Phase 8).
+- ⏳ Uganda DPPA 2019 compliance review (Phase 6, tracked in STATUS.md).
+
+---
+
+## Contributing
+
+PRs welcome. Please:
+
+1. Branch from `main`.
+2. Run `pnpm -w lint && pnpm -w typecheck && pnpm -w test` before pushing.
+3. Keep the schema in `apps/api/prisma/schema.prisma` as the source of truth — regenerate migrations with `pnpm -w migrate`.
+4. **Never commit real student data.** The seed script uses only synthetic data; a CI check (planned) will reject any CSV that does not match the `S[1-6][EW]-\d{4}` admission-number pattern.
 
 ## License
 
-See [LICENSE](LICENSE).
+MIT — see [`LICENSE`](./LICENSE).

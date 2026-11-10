@@ -1,0 +1,25 @@
+:root {
+  /* Brand palette — placeholder. To be extracted from the official
+     Light Academy logo in Phase 2. These values are conservative and
+     accessible. */
+  --brand-primary: #1e3a5f;
+  --brand-primary-dark: #15294a;
+  --brand-accent: #d4a017;
+  --brand-bg: #f7f9fc;
+  --brand-bg-dark: #0f172a;
+  --brand-text: #0f172a;
+  --brand-text-muted: #475569;
+  --brand-border: #cbd5e1;
+  --brand-error: #b91c1c;
+  --brand-success: #15803d;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif; color: var(--brand-text); background: var(--brand-bg); }
+button { font-family: inherit; }
+a { color: var(--brand-primary); }
+
+.brand-motto {
+  font-style: italic;
+  color: var(--brand-text-muted);
+}

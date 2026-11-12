@@ -313,3 +313,146 @@ export interface AuthResponseDto {
 export interface RefreshDto {
   refreshToken: string;
 }
+
+// ---------------------------------------------------------------------------
+// Messaging — DTOs
+// ---------------------------------------------------------------------------
+
+export interface ConversationParticipantDto {
+  userId: string;
+  fullName: string;
+  role: 'MEMBER' | 'ADMIN';
+  joinedAt: string;
+}
+
+export interface ConversationDto {
+  id: string;
+  type: 'PRIVATE' | 'GROUP';
+  title: string | null;        // for PRIVATE: the other party's name; for GROUP: the group name
+  groupId: string | null;
+  participants: ConversationParticipantDto[];
+  lastMessage: MessageDto | null;
+  lastReadMessageId: string | null;  // the caller's last-read watermark
+  unreadCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ConversationListItemDto {
+  id: string;
+  type: 'PRIVATE' | 'GROUP';
+  title: string | null;
+  lastMessagePreview: string | null;
+  lastMessageAt: string | null;
+  unreadCount: number;
+  updatedAt: string;
+}
+
+export interface MessageAttachmentDto {
+  id: string;
+  filename: string;
+  mimeType: string;
+  sizeBytes: number;
+  // signedUrl is null if the caller cannot access the attachment
+  signedUrl: string | null;
+}
+
+export interface MessageReactionDto {
+  emoji: string;
+  userId: string;
+  fullName: string;
+}
+
+export interface MessageDto {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  senderName: string;
+  clientMessageId: string;
+  type: 'TEXT' | 'IMAGE' | 'VIDEO' | 'AUDIO' | 'VOICE' | 'DOCUMENT' | 'SYSTEM';
+  body: string | null;
+  replyTo: {
+    id: string;
+    senderName: string;
+    bodyPreview: string;
+  } | null;
+  reactions: MessageReactionDto[];
+  attachments: MessageAttachmentDto[];
+  editedAt: string | null;
+  deletedAt: string | null;
+  createdAt: string;
+  // delivery state from the perspective of the caller (null for the sender)
+  myDeliveryState: 'SENT' | 'DELIVERED' | 'READ' | null;
+}
+
+// ---------------------------------------------------------------------------
+// Messaging — WebSocket event contracts
+// ---------------------------------------------------------------------------
+
+/**
+ * Events the client sends to the server (client → server).
+ */
+export enum WsClientEvent {
+  JOIN_CONVERSATION = 'conversation.join',
+  LEAVE_CONVERSATION = 'conversation.leave',
+  SEND_MESSAGE = 'message.send',
+  EDIT_MESSAGE = 'message.edit',
+  DELETE_MESSAGE = 'message.delete',
+  TYPING_START = 'typing.start',
+  TYPING_STOP = 'typing.stop',
+  MARK_READ = 'message.read',
+  REACT = 'message.react',
+  UNREACT = 'message.unreact',
+}
+
+/**
+ * Events the server sends to the client (server → client).
+ */
+export enum WsServerEvent {
+  MESSAGE_NEW = 'message.new',
+  MESSAGE_EDITED = 'message.edited',
+  MESSAGE_DELETED = 'message.deleted',
+  MESSAGE_REACTION_ADDED = 'message.reaction.added',
+  MESSAGE_REACTION_REMOVED = 'message.reaction.removed',
+  TYPING_UPDATE = 'typing.update',
+  READ_RECEIPT = 'message.read_receipt',
+  DELIVERY_UPDATE = 'message.delivery',
+  ERROR = 'error',
+  AUTHORIZED = 'authorized',
+}
+
+export interface WsSendMessagePayload {
+  conversationId: string;
+  clientMessageId: string;
+  type?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'AUDIO' | 'VOICE' | 'DOCUMENT';
+  body?: string;
+  replyToId?: string;
+}
+
+export interface WsEditMessagePayload {
+  messageId: string;
+  body: string;
+}
+
+export interface WsReactPayload {
+  messageId: string;
+  emoji: string;
+}
+
+export interface WsTypingPayload {
+  conversationId: string;
+}
+
+export interface WsMarkReadPayload {
+  conversationId: string;
+  lastReadMessageId: string;
+}
+
+export interface WsAuthorizedPayload {
+  userId: string;
+}
+
+export interface WsErrorPayload {
+  code: string;
+  message: string;
+}

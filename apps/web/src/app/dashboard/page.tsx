@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { apiFetch, logout, isAuthenticated } from '@/lib/api';
 import type { UserProfileDto } from '@la-chat/shared-types';
 
@@ -78,11 +79,19 @@ export default function DashboardPage() {
         </section>
 
         <section style={styles.section}>
+          <h2 style={styles.sectionTitle}>Messaging</h2>
+          <p style={styles.muted}>
+            Open your conversations to start chatting in real time with other
+            members of the Light Academy community.
+          </p>
+          <Link href="/chat" style={styles.chatLink}>Open LA Chat →</Link>
+        </section>
+
+        <section style={styles.section}>
           <h2 style={styles.sectionTitle}>What's next</h2>
           <p style={styles.muted}>
-            This is a Phase 1 dashboard stub. Messaging, groups, announcements and
-            the administration console arrive in Phases 3–6. See
-            {' '}<code>documentation/deployment/roadmap.md</code>.
+            Groups, announcements and the administration console arrive in
+            Phases 4–6. See <code>documentation/deployment/roadmap.md</code>.
           </p>
         </section>
       </div>
@@ -115,4 +124,5 @@ const styles: Record<string, React.CSSProperties> = {
   button: { padding: '0.5rem 1rem', borderRadius: '6px', border: 'none', background: '#1e3a5f', color: 'white', cursor: 'pointer' },
   outlineButton: { padding: '0.5rem 1rem', borderRadius: '6px', border: '1px solid #cbd5e1', background: 'white', color: '#1e3a5f', cursor: 'pointer' },
   muted: { color: '#475569', lineHeight: 1.5 },
+  chatLink: { display: 'inline-block', marginTop: '0.75rem', padding: '0.6rem 1.25rem', background: '#1e3a5f', color: 'white', borderRadius: '8px', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' },
 };

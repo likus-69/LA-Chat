@@ -2,12 +2,17 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { WsAdapter } from '@nestjs/platform-ws';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
+
+  // Use the raw `ws` adapter for WebSocket support (not socket.io).
+  app.useWebSocketAdapter(new WsAdapter(app));
+
   const config = app.get(ConfigService);
   const logger = new Logger('Bootstrap');
 
@@ -49,7 +54,7 @@ async function bootstrap() {
   const swaggerConfig = new DocumentBuilder()
     .setTitle('LA Chat API')
     .setDescription('Secure school communication platform — Light Academy Secondary School')
-    .setVersion('0.1.0')
+    .setVersion('0.2.0')
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
@@ -58,6 +63,7 @@ async function bootstrap() {
   await app.listen(port);
   logger.log(`LA Chat API listening on :${port} (${env})`);
   logger.log(`Swagger UI at /docs`);
+  logger.log(`WebSocket endpoint at ws://localhost:${port}/ws`);
   logger.log(`CORS origins: ${corsOrigins.join(', ')}`);
 }
 

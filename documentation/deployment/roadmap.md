@@ -8,7 +8,7 @@ Eight phases. Each phase has a definition of done and an acceptance gate. The ph
 |---|---|---|---|
 | 1 | Foundation | 1–2 wks | **Done (this commit)** |
 | 2 | Auth & Users | 2 wks | **Partial (this commit)** |
-| 3 | Messaging | 3 wks | Not started |
+| 3 | Messaging | 3 wks | **Done** |
 | 4 | Media & Notifications | 2 wks | Not started |
 | 5 | School Features | 2 wks | Not started |
 | 6 | Security & Moderation | 2 wks | Not started |
@@ -53,7 +53,7 @@ Eight phases. Each phase has a definition of done and an acceptance gate. The ph
 
 ---
 
-## Phase 3 — Messaging (next)
+## Phase 3 — Messaging (DONE)
 
 **Scope:** private 1-to-1, group messaging, real-time WebSocket delivery, reactions, read receipts, typing indicators, message search, message edit/delete, replies, forwarding.
 
@@ -73,7 +73,7 @@ Eight phases. Each phase has a definition of done and an acceptance gate. The ph
 
 ---
 
-## Phase 4 — Media & Notifications
+## Phase 4 — Media & Notifications (next)
 
 **Scope:** image / document / voice / video sharing; upload progress; signed downloads; push notifications (Android FCM + iOS APNs + web push); in-app notification centre; notification preferences.
 

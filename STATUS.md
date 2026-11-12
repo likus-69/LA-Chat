@@ -1,6 +1,6 @@
 # LA Chat — Development Status
 
-**Last updated:** 2026-11-11
+**Last updated:** 2026-11-12
 **Live source of truth for what works, what is partial, and what is still to build.** Per spec §26, this file is updated at every milestone.
 
 ---
@@ -11,12 +11,12 @@
 |---|---|---|
 | 1. Foundation | ✅ Done | Repo, stack, design tokens, Docker Compose, app shells. |
 | 2. Auth & Users | 🟡 Partial | Auth, RBAC, profiles, classes/streams/subjects done. MFA, CSV import, session UI pending. |
-| 3. Messaging | ⏳ Not started | Next phase. |
+| 3. Messaging | ✅ Done | Real-time WebSocket messaging, conversations, reactions, edit/delete, read receipts, search. |
 | 4. Media & Notifications | ⏳ Not started | |
 | 5. School Features | ⏳ Not started | |
 | 6. Security & Moderation | ⏳ Not started | |
 | 7. Mobile | ⏳ Not started | |
-| 8. Testing & Deployment | ⏳ Partial | Unit tests for validation; full suite pending. |
+| 8. Testing & Deployment | 🟡 Partial | 34 unit tests pass; full integration/e2e suite pending. |
 
 Legend: ✅ done · 🟡 partial · ⏳ not started
 
@@ -105,6 +105,73 @@ curl -X POST http://localhost:4000/api/v1/users/me \  # using a student token
   ...
 # A student calling /users (list) → 403
 ```
+
+---
+
+## Phase 3 — Messaging ✅
+
+### Completed
+
+- **Real-time WebSocket gateway** (`/ws`) with JWT auth via `Sec-WebSocket-Protocol` subprotocol. Auto-reconnect with exponential backoff on the client. Pending-message queue so messages typed while offline are sent on reconnect.
+- **Conversation policy engine** — enforces who can talk to whom:
+  - Student ↔ Student private chat **off by default**.
+  - Teacher → Student requires an active `teacher_assignments` row in the student's class.
+  - Parent → Teacher requires the teacher to teach the parent's child.
+  - Staff ↔ Staff always allowed.
+  - Headteacher ↔ anyone always allowed.
+- **Private conversations** — `POST /conversations/private` (idempotent: returns existing conversation if one already exists between the two parties).
+- **Group conversations** — `POST /conversations/group` with caller as ADMIN, optional link to a `Group` record.
+- **Conversation list** — `GET /conversations` with unread counts and last-message preview per conversation.
+- **Message send** — REST `POST /conversations/:id/messages` and WebSocket `message.send` event. **Idempotent on `(conversationId, clientMessageId)`** — replaying a send after reconnect returns the original message, never creates a duplicate.
+- **Message history** — `GET /conversations/:id/messages` with **cursor-based pagination** (`before=<messageId>&limit=<n>`, newest-first, client reverses for display).
+- **Message edit** — `PATCH /messages/:id` (own messages only). Broadcasts `message.edited` via WebSocket.
+- **Message delete** — `DELETE /messages/:id` (soft-delete, own messages only). Broadcasts `message.deleted`.
+- **Reactions** — `POST /messages/:id/reactions` and `DELETE /messages/:id/reactions/:emoji`. Broadcasts `message.reaction.added` / `message.reaction.removed`.
+- **Typing indicators** — `typing.start` / `typing.stop` WebSocket events; server broadcasts `typing.update` to other participants.
+- **Read receipts** — `POST /conversations/:id/read` and `message.read` WebSocket event. Updates `message_read_receipts` watermark and flips `message_delivery_status` to `READ`. Broadcasts `message.read_receipt` to other participants.
+- **Delivery status** — on WebSocket connect, all `SENT` messages for the user are marked `DELIVERED`. The gateway maintains per-user socket sets so a user with multiple devices gets the message on all of them.
+- **Search** — `GET /messages/search?q=...` with optional `conversationId` filter. Searches only across conversations the caller is a participant in (permission-gated). Currently LIKE-based; `tsvector` upgrade planned for Phase 6.
+- **Web chat UI**:
+  - `/chat` — conversation list with unread badges, last-message preview, real-time updates via WebSocket.
+  - `/chat/[conversationId]` — full chat view with message bubbles (own/theirs), optimistic send, typing indicator, connection status dot, auto-scroll, reaction display, edit/deleted tags.
+  - WebSocket client (`lib/ws.ts`) with automatic reconnect, pending-send queue, pending-join queue, and typed event subscriptions.
+- **Swagger** updated to v0.2.0 with all new messaging endpoints.
+
+### Build verification (run in this commit)
+
+```
+pnpm install                                       # ✓
+pnpm --filter @la-chat/shared-types build          # ✓
+pnpm --filter @la-chat/validation build            # ✓
+pnpm --filter @la-chat/api prisma generate         # ✓
+pnpm --filter @la-chat/api build                   # ✓ (nest build, 0 errors)
+pnpm --filter @la-chat/web build                   # ✓ (Next.js, 7 routes incl. /chat and /chat/[id])
+pnpm --filter @la-chat/api test                    # ✓ 34/34 tests pass
+```
+
+API boots through the full NestJS DI graph including the WebSocket gateway — verified with `WsAdapter` registered in `main.ts`. Only fails at DB connection (expected without Postgres running).
+
+### Smoke test (with Docker)
+
+```bash
+docker compose up -d db redis minio
+pnpm -w migrate && pnpm -w seed
+pnpm -w dev:api    # http://localhost:4000/docs
+pnpm -w dev:web    # http://localhost:3000/chat
+
+# Two browser tabs: log in as teacher1@la-chat.local and student.s1e-0001@la-chat.local
+# (password: Password1). From the teacher's tab, start a private chat with the student
+# via POST /api/v1/conversations/private { "participantId": "<student-user-id>" }.
+# Send messages back and forth — they should appear in real time.
+```
+
+### Not yet done in Phase 3
+
+- ⏳ **Message forwarding** — schema supports `replyToId`; forwarding (creating a new message that references a source message in another conversation) is deferred.
+- ⏳ **`tsvector` full-text search** — current search is `ILIKE`-based; fine for ≤ 50 000 messages but will be upgraded to Postgres `tsvector` in Phase 6.
+- ⏳ **Group management UI** — the REST endpoint exists; no web UI yet for renaming groups, adding/removing members, pinning messages.
+- ⏳ **Pinned messages** — `conversation.pin_message` permission exists; endpoint not yet implemented.
+- ⏳ **Message attachments** — the DTO and schema fields exist; actual file upload + signed-URL download comes in Phase 4 (Media).
 
 ---
 

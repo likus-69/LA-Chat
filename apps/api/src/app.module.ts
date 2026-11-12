@@ -4,6 +4,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { AcademicModule } from './academic/academic.module';
+import { MessagingModule } from './messaging/messaging.module';
 import { RolesModule } from './roles/roles.module';
 import { HealthController } from './health.controller';
 
@@ -18,6 +19,7 @@ import { HealthController } from './health.controller';
     AuthModule,
     UsersModule,
     AcademicModule,
+    MessagingModule,
   ],
   controllers: [HealthController],
 })

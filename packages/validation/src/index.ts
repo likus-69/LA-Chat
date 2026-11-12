@@ -132,3 +132,76 @@ export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type CreateClassInput = z.infer<typeof createClassSchema>;
 export type CreateStreamInput = z.infer<typeof createStreamSchema>;
 export type CreateSubjectInput = z.infer<typeof createSubjectSchema>;
+
+// ---------------------------------------------------------------------------
+// Messaging
+// ---------------------------------------------------------------------------
+
+const uuidSchema = z.string().uuid();
+const emojiSchema = z.string().min(1).max(10);
+const messageBodySchema = z.string().min(1).max(10_000);
+const clientMessageIdSchema = z
+  .string()
+  .min(8, 'clientMessageId must be at least 8 chars')
+  .max(64)
+  .regex(/^[A-Za-z0-9_-]+$/, 'clientMessageId must be URL-safe');
+const messageTypeSchema = z.enum(['TEXT', 'IMAGE', 'VIDEO', 'AUDIO', 'VOICE', 'DOCUMENT']);
+
+export const createPrivateConversationSchema = z.object({
+  participantId: uuidSchema,
+});
+
+export const createGroupConversationSchema = z.object({
+  name: z.string().min(2).max(80),
+  description: z.string().max(500).optional(),
+  participantIds: z.array(uuidSchema).min(1).max(200),
+  groupId: uuidSchema.optional(),
+});
+
+export const sendMessageSchema = z.object({
+  conversationId: uuidSchema,
+  clientMessageId: clientMessageIdSchema,
+  type: messageTypeSchema.default('TEXT'),
+  body: z.string().max(10_000).optional(),
+  replyToId: uuidSchema.optional(),
+});
+
+export const editMessageSchema = z.object({
+  body: messageBodySchema,
+});
+
+export const reactSchema = z.object({
+  emoji: emojiSchema,
+});
+
+export const markReadSchema = z.object({
+  lastReadMessageId: uuidSchema,
+});
+
+export const searchMessagesSchema = z.object({
+  q: z.string().min(2).max(200),
+  conversationId: uuidSchema.optional(),
+  page: z.coerce.number().int().min(1).max(1000).default(1),
+  pageSize: z.coerce.number().int().min(1).max(50).default(20),
+});
+
+export const listConversationsSchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(50),
+});
+
+export const listMessagesSchema = z.object({
+  // cursor-based pagination: fetch messages older than this id
+  before: uuidSchema.optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+});
+
+export type CreatePrivateConversationInput = z.infer<typeof createPrivateConversationSchema>;
+export type CreateGroupConversationInput = z.infer<typeof createGroupConversationSchema>;
+export type SendMessageInput = z.infer<typeof sendMessageSchema>;
+export type EditMessageInput = z.infer<typeof editMessageSchema>;
+export type ReactInput = z.infer<typeof reactSchema>;
+export type MarkReadInput = z.infer<typeof markReadSchema>;
+export type SearchMessagesInput = z.infer<typeof searchMessagesSchema>;
+export type ListConversationsInput = z.infer<typeof listConversationsSchema>;
+export type ListMessagesInput = z.infer<typeof listMessagesSchema>;

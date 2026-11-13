@@ -13,6 +13,8 @@ import { JwtService } from '@nestjs/jwt';
 import { WebSocket } from 'ws';
 import { PrismaService } from '../prisma/prisma.service';
 import { MessagesService } from './messages.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { PushService } from '../notifications/push.service';
 import {
   WsClientEvent,
   WsServerEvent,
@@ -65,6 +67,8 @@ export class MessagingGateway implements OnGatewayConnection, OnGatewayDisconnec
     private config: ConfigService,
     private messages: MessagesService,
     private prisma: PrismaService,
+    private notifications: NotificationsService,
+    private push: PushService,
   ) {}
 
   // -------------------------------------------------------------------------
@@ -190,6 +194,7 @@ export class MessagingGateway implements OnGatewayConnection, OnGatewayDisconnec
         type: body.type,
         body: body.body,
         replyToId: body.replyToId,
+        assetIds: body.assetIds,
       });
 
       // Ack the sender with the authoritative message
@@ -200,6 +205,9 @@ export class MessagingGateway implements OnGatewayConnection, OnGatewayDisconnec
 
       // Also push to any other devices the sender has open
       this.sendToUser(meta.userId, client, WsServerEvent.MESSAGE_NEW, { message, echoed: true });
+
+      // Push notification to offline participants (Phase 4)
+      this.queuePushForOfflineParticipants(body.conversationId, meta.userId, message).catch(() => {});
     } catch (e) {
       this.sendError(client, (e as Error).message);
     }
@@ -321,6 +329,36 @@ export class MessagingGateway implements OnGatewayConnection, OnGatewayDisconnec
       });
     } catch (e) {
       this.sendError(client, (e as Error).message);
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Push notifications for offline participants (Phase 4)
+  // -------------------------------------------------------------------------
+
+  private async queuePushForOfflineParticipants(
+    conversationId: string,
+    senderId: string,
+    message: { id: string; conversationId: string; senderName: string },
+  ): Promise<void> {
+    const participants = await this.prisma.conversationParticipant.findMany({
+      where: { conversationId, userId: { not: senderId }, leftAt: null },
+      select: { userId: true },
+    });
+
+    for (const { userId } of participants) {
+      const sockets = this.userSockets.get(userId);
+      const hasActiveSocket = sockets && Array.from(sockets).some((s) => s.readyState === 1);
+      if (hasActiveSocket) continue;
+
+      await this.notifications.notifyNewMessage(userId, message as any, message.senderName).catch(() => {});
+      await this.push.sendToUser(
+        userId,
+        'message.new',
+        'LA Chat',
+        `New message from ${message.senderName}`,
+        { conversationId, messageId: message.id },
+      ).catch(() => {});
     }
   }
 

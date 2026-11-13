@@ -87,7 +87,10 @@ export default function ChatListPage() {
               <h1 style={styles.title}>LA Chat</h1>
               <p style={styles.subtitle}>{profile?.fullName}</p>
             </div>
-            <button onClick={handleLogout} style={styles.iconButton} title="Sign out">⎋</button>
+            <div style={{ display: 'flex', gap: '0.25rem' }}>
+              <Link href="/notifications" style={styles.iconButton} title="Notifications">🔔</Link>
+              <button onClick={handleLogout} style={styles.iconButton} title="Sign out">⎋</button>
+            </div>
           </div>
 
           <div style={styles.conversationList}>

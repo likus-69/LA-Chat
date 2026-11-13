@@ -9,7 +9,7 @@ Eight phases. Each phase has a definition of done and an acceptance gate. The ph
 | 1 | Foundation | 1–2 wks | **Done (this commit)** |
 | 2 | Auth & Users | 2 wks | **Partial (this commit)** |
 | 3 | Messaging | 3 wks | **Done** |
-| 4 | Media & Notifications | 2 wks | Not started |
+| 4 | Media & Notifications | 2 wks | **Done** |
 | 5 | School Features | 2 wks | Not started |
 | 6 | Security & Moderation | 2 wks | Not started |
 | 7 | Mobile | 2 wks | Not started |
@@ -73,7 +73,7 @@ Eight phases. Each phase has a definition of done and an acceptance gate. The ph
 
 ---
 
-## Phase 4 — Media & Notifications (next)
+## Phase 4 — Media & Notifications (DONE)
 
 **Scope:** image / document / voice / video sharing; upload progress; signed downloads; push notifications (Android FCM + iOS APNs + web push); in-app notification centre; notification preferences.
 
@@ -86,7 +86,7 @@ Eight phases. Each phase has a definition of done and an acceptance gate. The ph
 
 ---
 
-## Phase 5 — School Features
+## Phase 5 — School Features (next)
 
 **Scope:** announcements (with categories, priority, expiry, ack), subject/class/department/club groups, parent-teacher messaging, headteacher's dashboard widgets.
 

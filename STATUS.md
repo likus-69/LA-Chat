@@ -12,11 +12,11 @@
 | 1. Foundation | ✅ Done | Repo, stack, design tokens, Docker Compose, app shells. |
 | 2. Auth & Users | 🟡 Partial | Auth, RBAC, profiles, classes/streams/subjects done. MFA, CSV import, session UI pending. |
 | 3. Messaging | ✅ Done | Real-time WebSocket messaging, conversations, reactions, edit/delete, read receipts, search. |
-| 4. Media & Notifications | ⏳ Not started | |
+| 4. Media & Notifications | ✅ Done | File upload (image/doc/voice/video), signed URLs, in-app notification centre, push scaffolding (FCM/APNs). |
 | 5. School Features | ⏳ Not started | |
 | 6. Security & Moderation | ⏳ Not started | |
 | 7. Mobile | ⏳ Not started | |
-| 8. Testing & Deployment | 🟡 Partial | 34 unit tests pass; full integration/e2e suite pending. |
+| 8. Testing & Deployment | 🟡 Partial | 60 unit tests pass; full integration/e2e suite pending. |
 
 Legend: ✅ done · 🟡 partial · ⏳ not started
 

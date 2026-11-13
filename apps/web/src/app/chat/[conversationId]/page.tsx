@@ -5,9 +5,11 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiFetch, ApiError, isAuthenticated } from '@/lib/api';
 import { getMessagingSocket } from '@/lib/ws';
+import { uploadFile, categoryForFile, VoiceRecorder, getDownloadUrl } from '@/lib/media';
 import type {
   ConversationDto,
   MessageDto,
+  MessageAttachmentDto,
   UserProfileDto,
 } from '@la-chat/shared-types';
 import {
@@ -27,6 +29,12 @@ export default function ConversationPage() {
   const [error, setError] = useState<string | null>(null);
   const [typingUsers, setTypingUsers] = useState<Map<string, string>>(new Map());
   const [connected, setConnected] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [uploadingName, setUploadingName] = useState<string | null>(null);
+  const [voiceRecording, setVoiceRecording] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const voiceRecorderRef = useRef<VoiceRecorder | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastReadMessageId = useRef<string | null>(null);
@@ -217,6 +225,79 @@ export default function ConversationPage() {
     }
   };
 
+  // Media: file upload + voice recording
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !profile) return;
+    const file = files[0];
+    const category = categoryForFile(file);
+    setUploadingName(file.name);
+    setUploadProgress(0);
+    try {
+      const { asset } = await uploadFile(file, category, (pct) => setUploadProgress(pct));
+      const clientMessageId = `web-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      const optimistic: MessageDto = {
+        id: `pending-${clientMessageId}`, conversationId, senderId: profile.id,
+        senderName: profile.fullName, clientMessageId,
+        type: category.toUpperCase() as any, body: draft.trim() || null,
+        replyTo: null, reactions: [],
+        attachments: [{ id: asset.id, filename: asset.filename, mimeType: asset.mimeType, sizeBytes: asset.sizeBytes, signedUrl: asset.signedUrl }],
+        editedAt: null, deletedAt: null, createdAt: new Date().toISOString(), myDeliveryState: null,
+      };
+      setMessages((prev) => [...prev, optimistic]);
+      setDraft('');
+      getMessagingSocket().sendMessage({ conversationId, clientMessageId, body: optimistic.body ?? undefined, assetIds: [asset.id] });
+    } catch (err) {
+      setVoiceError(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setUploadProgress(null); setUploadingName(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }, [conversationId, profile, draft]);
+
+  const handleVoiceStart = useCallback(async () => {
+    setVoiceError(null);
+    try {
+      voiceRecorderRef.current = new VoiceRecorder();
+      await voiceRecorderRef.current.start();
+      setVoiceRecording(true);
+    } catch (err) {
+      setVoiceError(err instanceof Error ? err.message : 'Microphone access denied');
+    }
+  }, []);
+
+  const handleVoiceStop = useCallback(async () => {
+    if (!voiceRecorderRef.current || !profile) return;
+    setVoiceRecording(false);
+    try {
+      const { blob } = await voiceRecorderRef.current.stop();
+      const file = new File([blob], `voice-${Date.now()}.webm`, { type: blob.type });
+      setUploadingName(file.name); setUploadProgress(0);
+      const { asset } = await uploadFile(file, 'voice', (pct) => setUploadProgress(pct));
+      const clientMessageId = `web-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      const optimistic: MessageDto = {
+        id: `pending-${clientMessageId}`, conversationId, senderId: profile.id,
+        senderName: profile.fullName, clientMessageId, type: 'VOICE', body: null,
+        replyTo: null, reactions: [],
+        attachments: [{ id: asset.id, filename: asset.filename, mimeType: asset.mimeType, sizeBytes: asset.sizeBytes, signedUrl: asset.signedUrl }],
+        editedAt: null, deletedAt: null, createdAt: new Date().toISOString(), myDeliveryState: null,
+      };
+      setMessages((prev) => [...prev, optimistic]);
+      getMessagingSocket().sendMessage({ conversationId, clientMessageId, assetIds: [asset.id] });
+    } catch (err) {
+      setVoiceError(err instanceof Error ? err.message : 'Voice recording failed');
+    } finally {
+      setUploadProgress(null); setUploadingName(null);
+      voiceRecorderRef.current = null;
+    }
+  }, [conversationId, profile]);
+
+  const handleVoiceCancel = useCallback(() => {
+    voiceRecorderRef.current?.cancel();
+    voiceRecorderRef.current = null;
+    setVoiceRecording(false);
+  }, []);
+
   if (loading) {
     return <main style={styles.page}><p style={styles.loading}>Loading conversation…</p></main>;
   }
@@ -268,7 +349,16 @@ export default function ConversationPage() {
                     {m.deletedAt ? (
                       <span style={styles.deletedText}>This message was deleted</span>
                     ) : (
-                      <span style={styles.messageBody}>{m.body}</span>
+                      <>
+                        {m.body && <span style={styles.messageBody}>{m.body}</span>}
+                        {m.attachments.length > 0 && (
+                          <div style={styles.attachmentsRow}>
+                            {m.attachments.map((att) => (
+                              <AttachmentView key={att.id} attachment={att} />
+                            ))}
+                          </div>
+                        )}
+                      </>
                     )}
                     {m.editedAt && !m.deletedAt && <span style={styles.editedTag}> (edited)</span>}
                     <div style={styles.metaRow}>
@@ -296,8 +386,33 @@ export default function ConversationPage() {
           <div ref={messagesEndRef} />
         </div>
 
+        {/* Upload progress + voice error */}
+        {uploadProgress !== null && (
+          <div style={styles.uploadBar}>
+            <span>Uploading {uploadingName}… {uploadProgress}%</span>
+            <div style={styles.uploadProgressTrack}>
+              <div style={{ ...styles.uploadProgressFill, width: `${uploadProgress}%` }} />
+            </div>
+          </div>
+        )}
+        {voiceError && <div style={styles.voiceErrorBar}>{voiceError}</div>}
+
         {/* Composer */}
         <footer style={styles.composer}>
+          <input ref={fileInputRef} type="file" style={{ display: 'none' }} onChange={handleFileSelect}
+            accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.rtf" />
+          <button style={styles.composerButton} onClick={() => fileInputRef.current?.click()}
+            disabled={!connected || uploadProgress !== null} title="Attach a file">📎</button>
+          {voiceRecording ? (
+            <>
+              <span style={styles.recordingIndicator}>● Recording…</span>
+              <button style={styles.composerButton} onClick={handleVoiceCancel} title="Cancel">✕</button>
+              <button style={{ ...styles.composerButton, color: '#15803d' }} onClick={handleVoiceStop} title="Send voice message">✓</button>
+            </>
+          ) : (
+            <button style={styles.composerButton} onClick={handleVoiceStart}
+              disabled={!connected || uploadProgress !== null} title="Record a voice message">🎤</button>
+          )}
           <textarea
             style={styles.textarea}
             placeholder="Type a message… (Enter to send, Shift+Enter for newline)"
@@ -329,6 +444,57 @@ function formatTime(iso: string): string {
   }
 }
 
+function AttachmentView({ attachment }: { attachment: MessageAttachmentDto }) {
+  const [url, setUrl] = useState<string | null>(attachment.signedUrl);
+  useEffect(() => {
+    if (!url && attachment.id) {
+      getDownloadUrl(attachment.id).then((u) => setUrl(u)).catch(() => {});
+    }
+  }, [attachment.id, attachment.signedUrl, url]);
+
+  const isImage = attachment.mimeType.startsWith('image/');
+  const isAudio = attachment.mimeType.startsWith('audio/');
+  const isVideo = attachment.mimeType.startsWith('video/');
+  const sizeLabel = formatSize(attachment.sizeBytes);
+
+  if (isImage && url) {
+    return <div style={attStyles.imageWrap}><img src={url} alt={attachment.filename} style={attStyles.image} /></div>;
+  }
+  if (isAudio && url) {
+    return <div style={attStyles.audioWrap}><audio controls src={url} style={attStyles.audio} /><span style={attStyles.audioLabel}>{attachment.filename} ({sizeLabel})</span></div>;
+  }
+  if (isVideo && url) {
+    return <div style={attStyles.videoWrap}><video controls src={url} style={attStyles.video} /></div>;
+  }
+  return (
+    <a href={url ?? '#'} onClick={(e) => { if (!url) e.preventDefault(); }} style={attStyles.docLink} download={attachment.filename}>
+      <span style={attStyles.docIcon}>📄</span>
+      <span style={attStyles.docBody}><span style={attStyles.docName}>{attachment.filename}</span><span style={attStyles.docSize}>{sizeLabel}</span></span>
+    </a>
+  );
+}
+
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+const attStyles: Record<string, React.CSSProperties> = {
+  imageWrap: { marginTop: '0.5rem', borderRadius: '8px', overflow: 'hidden' },
+  image: { maxWidth: '100%', maxHeight: '300px', display: 'block', borderRadius: '8px' },
+  audioWrap: { marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' },
+  audio: { width: '100%', maxWidth: '280px', height: '36px' },
+  audioLabel: { fontSize: '0.75rem', opacity: 0.7 },
+  videoWrap: { marginTop: '0.5rem', borderRadius: '8px', overflow: 'hidden' },
+  video: { maxWidth: '100%', maxHeight: '300px', display: 'block', borderRadius: '8px' },
+  docLink: { display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem', padding: '0.5rem 0.75rem', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', textDecoration: 'none', color: 'inherit', cursor: 'pointer' },
+  docIcon: { fontSize: '1.5rem' },
+  docBody: { display: 'flex', flexDirection: 'column' },
+  docName: { fontSize: '0.85rem', fontWeight: 600 },
+  docSize: { fontSize: '0.7rem', opacity: 0.7 },
+};
+
 const styles: Record<string, React.CSSProperties> = {
   page: { minHeight: '100vh', background: '#f0f2f5', display: 'flex' },
   chatShell: { display: 'flex', flexDirection: 'column', width: '100%', height: '100vh' },
@@ -353,9 +519,16 @@ const styles: Record<string, React.CSSProperties> = {
   reactionChip: { background: 'rgba(255,255,255,0.15)', borderRadius: '10px', padding: '0.05rem 0.35rem', fontSize: '0.7rem' },
   typingIndicator: { fontSize: '0.8rem', color: '#64748b', fontStyle: 'italic', padding: '0 0.5rem' },
   emptyMessages: { textAlign: 'center', color: '#94a3b8', padding: '2rem', margin: 'auto' },
-  composer: { display: 'flex', gap: '0.5rem', padding: '0.75rem', background: 'white', borderTop: '1px solid #e2e8f0' },
+  composer: { display: 'flex', gap: '0.5rem', padding: '0.75rem', background: 'white', borderTop: '1px solid #e2e8f0', alignItems: 'center' },
+  composerButton: { background: 'transparent', border: 'none', fontSize: '1.4rem', cursor: 'pointer', padding: '0.25rem 0.5rem', color: '#1e3a5f', flexShrink: 0 },
+  recordingIndicator: { fontSize: '0.85rem', color: '#b91c1c', fontWeight: 600 },
   textarea: { flex: 1, padding: '0.6rem 0.75rem', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.95rem', fontFamily: 'inherit', resize: 'none', outline: 'none', minHeight: '40px', maxHeight: '120px' },
-  sendButton: { padding: '0.6rem 1.25rem', background: '#1e3a5f', color: 'white', border: 'none', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' },
+  sendButton: { padding: '0.6rem 1.25rem', background: '#1e3a5f', color: 'white', border: 'none', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer', flexShrink: 0 },
+  uploadBar: { padding: '0.5rem 1rem', background: '#f1f5f9', display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.8rem', color: '#475569' },
+  uploadProgressTrack: { height: '4px', background: '#e2e8f0', borderRadius: '2px', overflow: 'hidden' },
+  uploadProgressFill: { height: '100%', background: '#1e3a5f', transition: 'width 0.2s' },
+  voiceErrorBar: { padding: '0.5rem 1rem', background: '#fef2f2', color: '#b91c1c', fontSize: '0.8rem' },
+  attachmentsRow: { display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.25rem' },
   loading: { padding: '2rem', textAlign: 'center', color: '#64748b', margin: 'auto' },
   errorCard: { background: 'white', padding: '2rem', borderRadius: '12px', maxWidth: '420px', margin: 'auto', textAlign: 'center' },
   link: { color: '#1e3a5f', textDecoration: 'none', display: 'inline-block', marginTop: '1rem' },

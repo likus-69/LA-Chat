@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConversationPolicy } from './conversation.policy';
+import { MediaService } from '../media/media.service';
 import {
   MessageDto,
   MessageReactionDto,
@@ -14,6 +15,7 @@ export interface SendMessageArgs {
   type?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'AUDIO' | 'VOICE' | 'DOCUMENT';
   body?: string;
   replyToId?: string;
+  assetIds?: string[];
 }
 
 @Injectable()
@@ -21,6 +23,7 @@ export class MessagesService {
   constructor(
     private prisma: PrismaService,
     private policy: ConversationPolicy,
+    private media: MediaService,
   ) {}
 
   // -------------------------------------------------------------------------
@@ -45,10 +48,21 @@ export class MessagesService {
     // Permission: sender must be a participant
     await this.policy.assertIsParticipant(senderId, conversationId);
 
-    // Body / type validation: TEXT must have a body; media types will require an attachment (Phase 4)
-    const type = args.type ?? 'TEXT';
-    if (type === 'TEXT' && (!args.body || args.body.trim().length === 0)) {
-      throw new ForbiddenException('TEXT messages must have a non-empty body');
+    // Body / type validation: every message must have a body or at least one attachment.
+    // Auto-upgrade type based on the first asset's category when caller leaves it as TEXT.
+    const hasAttachments = (args.assetIds?.length ?? 0) > 0;
+    if (!hasAttachments && (!args.body || args.body.trim().length === 0)) {
+      throw new ForbiddenException('Message must have a non-empty body or at least one attachment');
+    }
+    if (hasAttachments && (!args.type || args.type === 'TEXT')) {
+      const firstAsset = await this.prisma.mediaAsset.findUnique({ where: { id: args.assetIds![0] } });
+      if (firstAsset) {
+        const cat = firstAsset.category.toUpperCase();
+        if (['IMAGE', 'VIDEO', 'AUDIO', 'VOICE', 'DOCUMENT'].includes(cat)) {
+          // @ts-expect-error — narrow union assignment
+          args.type = cat;
+        }
+      }
     }
 
     // Validate reply target if provided
@@ -64,12 +78,28 @@ export class MessagesService {
         conversationId,
         senderId,
         clientMessageId,
-        type,
+        type: args.type ?? 'TEXT',
         body: args.body ?? null,
         replyToId: args.replyToId ?? null,
       },
       include: { reactions: true, attachments: true, sender: true, replyTo: { include: { sender: true } } },
     });
+
+    // Attach media assets if provided (Phase 4)
+    if (hasAttachments && args.assetIds) {
+      await this.media.attachToMessage(senderId, created.id, args.assetIds);
+      const withAttachments = await this.prisma.message.findUnique({
+        where: { id: created.id },
+        include: { reactions: true, attachments: true, sender: true, replyTo: { include: { sender: true } } },
+      });
+      if (withAttachments) {
+        // Update conversation's lastMessageAt
+        await this.prisma.conversation.update({ where: { id: conversationId }, data: { lastMessageAt: created.createdAt } });
+        // Create delivery-status rows
+        await this.createDeliveryRows(conversationId, senderId, created.id);
+        return { message: this.toDto(withAttachments as any, senderId), created: true };
+      }
+    }
 
     // Update conversation's lastMessageAt
     await this.prisma.conversation.update({
@@ -78,6 +108,12 @@ export class MessagesService {
     });
 
     // Create delivery-status rows for every other participant (state = SENT).
+    await this.createDeliveryRows(conversationId, senderId, created.id);
+
+    return { message: this.toDto(created as any, senderId), created: true };
+  }
+
+  private async createDeliveryRows(conversationId: string, senderId: string, messageId: string): Promise<void> {
     const otherParticipants = await this.prisma.conversationParticipant.findMany({
       where: { conversationId, userId: { not: senderId }, leftAt: null },
       select: { userId: true },
@@ -85,14 +121,12 @@ export class MessagesService {
     if (otherParticipants.length > 0) {
       await this.prisma.messageDeliveryStatus.createMany({
         data: otherParticipants.map((p) => ({
-          messageId: created.id,
+          messageId,
           recipientId: p.userId,
           state: 'SENT',
         })),
       });
     }
-
-    return { message: this.toDto(created as any, senderId), created: true };
   }
 
   // -------------------------------------------------------------------------

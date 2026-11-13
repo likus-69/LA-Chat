@@ -5,6 +5,8 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { AcademicModule } from './academic/academic.module';
 import { MessagingModule } from './messaging/messaging.module';
+import { MediaModule } from './media/media.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { RolesModule } from './roles/roles.module';
 import { HealthController } from './health.controller';
 
@@ -19,6 +21,8 @@ import { HealthController } from './health.controller';
     AuthModule,
     UsersModule,
     AcademicModule,
+    MediaModule,
+    NotificationsModule,
     MessagingModule,
   ],
   controllers: [HealthController],

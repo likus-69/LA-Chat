@@ -205,3 +205,62 @@ export type MarkReadInput = z.infer<typeof markReadSchema>;
 export type SearchMessagesInput = z.infer<typeof searchMessagesSchema>;
 export type ListConversationsInput = z.infer<typeof listConversationsSchema>;
 export type ListMessagesInput = z.infer<typeof listMessagesSchema>;
+
+// Media
+export const mediaCategorySchema = z.enum(['image', 'document', 'voice', 'video', 'audio']);
+
+export const MEDIA_LIMITS: Record<z.infer<typeof mediaCategorySchema>, { maxBytes: number; allowedMimePrefixes: string[] }> = {
+  image:    { maxBytes: 10 * 1024 * 1024,  allowedMimePrefixes: ['image/'] },
+  document: { maxBytes: 25 * 1024 * 1024,  allowedMimePrefixes: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'text/plain', 'text/csv', 'application/rtf'] },
+  voice:    { maxBytes: 25 * 1024 * 1024,  allowedMimePrefixes: ['audio/webm', 'audio/ogg', 'audio/mpeg', 'audio/mp4', 'audio/aac'] },
+  video:    { maxBytes: 100 * 1024 * 1024, allowedMimePrefixes: ['video/mp4', 'video/webm', 'video/quicktime', 'video/ogg'] },
+  audio:    { maxBytes: 25 * 1024 * 1024,  allowedMimePrefixes: ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-wav', 'audio/ogg', 'audio/aac', 'audio/flac'] },
+};
+
+export const FORBIDDEN_MIME_TYPES = new Set([
+  'application/x-msdownload', 'application/x-executable', 'application/x-dosexec',
+  'application/octet-stream', 'application/x-sh', 'application/x-bat',
+  'application/x-python', 'application/javascript', 'text/html',
+]);
+
+export const uploadInitSchema = z.object({
+  filename: z.string().min(1).max(255),
+  mimeType: z.string().min(3).max(100),
+  category: mediaCategorySchema,
+  sizeBytes: z.number().int().positive().max(100 * 1024 * 1024),
+}).superRefine((val, ctx) => {
+  const limits = MEDIA_LIMITS[val.category];
+  if (val.sizeBytes > limits.maxBytes) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['sizeBytes'], message: `File exceeds ${limits.maxBytes / 1024 / 1024}MB limit for category "${val.category}"` });
+  }
+  if (FORBIDDEN_MIME_TYPES.has(val.mimeType)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['mimeType'], message: 'This file type is not allowed' });
+  }
+  const mimeOk = limits.allowedMimePrefixes.some((p) => val.mimeType === p || val.mimeType.startsWith(p));
+  if (!mimeOk) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['mimeType'], message: `MIME type "${val.mimeType}" is not allowed for category "${val.category}"` });
+  }
+});
+
+// Notifications
+export const notificationTypeSchema = z.enum([
+  'message.new', 'announcement.new', 'announcement.ack',
+  'report.status', 'account.approved', 'account.suspended', 'system',
+]);
+
+export const registerPushTokenSchema = z.object({
+  platform: z.enum(['ANDROID', 'IOS', 'WEB']),
+  token: z.string().min(10).max(4096),
+  label: z.string().max(80).optional(),
+});
+
+export const updateNotificationPreferencesSchema = z.object({
+  enabled: z.boolean(),
+  perType: z.record(notificationTypeSchema, z.object({ inApp: z.boolean(), push: z.boolean() })).optional(),
+  quietHoursStart: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).nullable().optional(),
+  quietHoursEnd: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).nullable().optional(),
+});
+
+export type UploadInitInput = z.infer<typeof uploadInitSchema>;
+export type RegisterPushTokenInput = z.infer<typeof registerPushTokenSchema>;
+export type UpdateNotificationPreferencesInput = z.infer<typeof updateNotificationPreferencesSchema>;

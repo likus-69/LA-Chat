@@ -427,6 +427,7 @@ export interface WsSendMessagePayload {
   type?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'AUDIO' | 'VOICE' | 'DOCUMENT';
   body?: string;
   replyToId?: string;
+  assetIds?: string[];
 }
 
 export interface WsEditMessagePayload {
@@ -455,4 +456,43 @@ export interface WsAuthorizedPayload {
 export interface WsErrorPayload {
   code: string;
   message: string;
+}
+
+// Media DTOs
+export type MediaCategory = 'image' | 'document' | 'voice' | 'video' | 'audio';
+
+export interface MediaAssetDto {
+  id: string;
+  ownerId: string;
+  category: MediaCategory;
+  filename: string;
+  mimeType: string;
+  sizeBytes: number;
+  storageKey: string;
+  widthPx: number | null;
+  heightPx: number | null;
+  durationSec: number | null;
+  signedUrl: string | null;
+  signedUrlTtlSec: number;
+  createdAt: string;
+}
+
+// Notifications DTOs
+export type NotificationType =
+  | 'message.new' | 'announcement.new' | 'announcement.ack'
+  | 'report.status' | 'account.approved' | 'account.suspended' | 'system';
+
+export interface NotificationDto {
+  id: string;
+  type: NotificationType;
+  payload: Record<string, unknown>;
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface NotificationPreferencesDto {
+  enabled: boolean;
+  perType: Record<string, { inApp: boolean; push: boolean }>;
+  quietHoursStart: string | null;
+  quietHoursEnd: string | null;
 }

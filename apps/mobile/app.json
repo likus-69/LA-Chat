@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "LA Chat",
+    "slug": "la-chat",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "lachat",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1e3a5f"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ug.sc.lightacademy.lachat",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "LA Chat needs microphone access to record voice messages.",
+        "NSCameraUsageDescription": "LA Chat needs camera access to take photos for sharing in chats.",
+        "NSPhotoLibraryUsageDescription": "LA Chat needs photo library access to share images in chats."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1e3a5f"
+      },
+      "package": "ug.sc.lightacademy.lachat",
+      "permissions": ["RECORD_AUDIO", "CAMERA", "READ_EXTERNAL_STORAGE"]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": ["expo-notifications"],
+    "extra": {
+      "eas": {
+        "projectId": ""
+      }
+    }
+  }
+}

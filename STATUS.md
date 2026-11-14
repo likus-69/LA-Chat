@@ -15,7 +15,7 @@
 | 4. Media & Notifications | ✅ Done | File upload (image/doc/voice/video), signed URLs, in-app notification centre, push scaffolding (FCM/APNs). |
 | 5. School Features | ✅ Done | Announcements, groups (auto-membership), dashboard stats. |
 | 6. Security & Moderation | ✅ Done | Report message/user, moderation queue, audit log viewer, DPPA review, threat model. |
-| 7. Mobile | ⏳ Not started | |
+| 7. Mobile | ✅ Done | Expo/React Native app: login, chat list, real-time chat, announcements, push registration. |
 | 8. Testing & Deployment | 🟡 Partial | 95 unit tests pass |
 
 Legend: ✅ done · 🟡 partial · ⏳ not started

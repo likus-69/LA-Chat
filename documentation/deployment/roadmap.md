@@ -12,7 +12,7 @@ Eight phases. Each phase has a definition of done and an acceptance gate. The ph
 | 4 | Media & Notifications | 2 wks | **Done** |
 | 5 | School Features | 2 wks | **Done** |
 | 6 | Security & Moderation | 2 wks | **Done** |
-| 7 | Mobile | 2 wks | Not started |
+| 7 | Mobile | 2 wks | **Done** |
 | 8 | Testing & Deployment | 2 wks | Not started |
 | | **Total to MVP** | **~16 wks** | |
 
@@ -111,7 +111,7 @@ Eight phases. Each phase has a definition of done and an acceptance gate. The ph
 
 ---
 
-## Phase 7 — Mobile (next)
+## Phase 7 — Mobile (DONE)
 
 **Scope:** React Native + Expo apps for Android and iOS, push integration, offline queue, media picker, voice recorder, app store submission assets.
 
@@ -124,7 +124,7 @@ Eight phases. Each phase has a definition of done and an acceptance gate. The ph
 
 ---
 
-## Phase 8 — Testing & Deployment
+## Phase 8 — Testing & Deployment (next)
 
 **Scope:** unit, integration, e2e, security, performance test suites; production-like staging; deployment runbook; release build.
 

@@ -560,3 +560,42 @@ export interface DashboardStatsDto {
   recentAnnouncements: { id: string; title: string; authorName: string; publishedAt: string }[];
   recentActivity: { action: string; actorName: string; at: string }[];
 }
+
+// ---------------------------------------------------------------------------
+// Moderation — DTOs
+// ---------------------------------------------------------------------------
+
+export type ReportCategory = 'BULLYING' | 'INAPPROPRIATE' | 'SPAM' | 'IMPERSONATION' | 'THREAT' | 'OTHER';
+export type ReportStatus = 'OPEN' | 'REVIEWING' | 'RESOLVED' | 'DISMISSED';
+export type ModerationActionType = 'WARN' | 'REMOVE_MESSAGE' | 'SUSPEND_ACCOUNT' | 'DISMISS';
+
+export interface ReportDto {
+  id: string;
+  reporterId: string;
+  reporterName: string;
+  reportedUserId: string | null;
+  reportedUserName: string | null;
+  reportedMessageId: string | null;
+  category: ReportCategory;
+  reason: string;
+  status: ReportStatus;
+  actions: { id: string; moderatorName: string; action: ModerationActionType; note: string | null; createdAt: string }[];
+  createdAt: string;
+  resolvedAt: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Audit log — DTOs
+// ---------------------------------------------------------------------------
+
+export interface AuditLogDto {
+  id: string;
+  actorId: string | null;
+  actorName: string;
+  action: string;
+  targetType: string | null;
+  targetId: string | null;
+  ip: string | null;
+  userAgent: string | null;
+  at: string;
+}

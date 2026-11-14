@@ -264,3 +264,59 @@ export const updateNotificationPreferencesSchema = z.object({
 export type UploadInitInput = z.infer<typeof uploadInitSchema>;
 export type RegisterPushTokenInput = z.infer<typeof registerPushTokenSchema>;
 export type UpdateNotificationPreferencesInput = z.infer<typeof updateNotificationPreferencesSchema>;
+
+// Announcements
+export const announcementCategorySchema = z.enum(['SCHOOL_WIDE', 'CLASS', 'EXAM', 'TIMETABLE', 'ACADEMIC', 'EVENT', 'EMERGENCY', 'ADMINISTRATIVE']);
+export const announcementPrioritySchema = z.enum(['LOW', 'NORMAL', 'HIGH', 'CRITICAL']);
+export const announcementAudienceSchema = z.enum(['ALL', 'CLASS', 'STREAM', 'STAFF', 'PARENTS']);
+
+export const createAnnouncementSchema = z.object({
+  category: announcementCategorySchema,
+  priority: announcementPrioritySchema.default('NORMAL'),
+  audience: announcementAudienceSchema,
+  title: z.string().min(2).max(200),
+  body: z.string().min(1).max(10_000),
+  expiresAt: z.string().datetime().optional(),
+  targetClassId: z.string().uuid().optional(),
+  targetStreamId: z.string().uuid().optional(),
+}).superRefine((val, ctx) => {
+  if (val.audience === 'CLASS' && !val.targetClassId) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['targetClassId'], message: 'CLASS audience requires targetClassId' });
+  }
+  if (val.audience === 'STREAM' && !val.targetStreamId) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['targetStreamId'], message: 'STREAM audience requires targetStreamId' });
+  }
+});
+
+// Groups
+export const groupTypeSchema = z.enum(['CLASS', 'STREAM', 'SUBJECT', 'DEPARTMENT', 'CLUB', 'ADMIN', 'PARENT']);
+export const groupMemberRoleSchema = z.enum(['MEMBER', 'ADMIN']);
+
+export const createGroupSchema = z.object({
+  type: groupTypeSchema,
+  name: z.string().min(2).max(80),
+  description: z.string().max(500).optional(),
+  classId: z.string().uuid().optional(),
+  streamId: z.string().uuid().optional(),
+  subjectId: z.string().uuid().optional(),
+  memberUserIds: z.array(z.string().uuid()).optional(),
+}).superRefine((val, ctx) => {
+  if (val.type === 'CLASS' && !val.classId) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['classId'], message: 'CLASS group requires classId' });
+  }
+  if (val.type === 'STREAM' && !val.streamId) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['streamId'], message: 'STREAM group requires streamId' });
+  }
+  if (val.type === 'SUBJECT' && !val.subjectId) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['subjectId'], message: 'SUBJECT group requires subjectId' });
+  }
+});
+
+export const addGroupMemberSchema = z.object({
+  userId: z.string().uuid(),
+  role: groupMemberRoleSchema.default('MEMBER'),
+});
+
+export type CreateAnnouncementInput = z.infer<typeof createAnnouncementSchema>;
+export type CreateGroupInput = z.infer<typeof createGroupSchema>;
+export type AddGroupMemberInput = z.infer<typeof addGroupMemberSchema>;

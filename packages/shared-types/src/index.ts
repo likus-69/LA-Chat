@@ -496,3 +496,67 @@ export interface NotificationPreferencesDto {
   quietHoursStart: string | null;
   quietHoursEnd: string | null;
 }
+
+// ---------------------------------------------------------------------------
+// Announcements — DTOs
+// ---------------------------------------------------------------------------
+
+export interface AnnouncementDto {
+  id: string;
+  authorId: string;
+  authorName: string;
+  category: string;
+  priority: string;
+  audience: string;
+  title: string;
+  body: string;
+  publishedAt: string;
+  expiresAt: string | null;
+  targetClassId: string | null;
+  targetStreamId: string | null;
+  targetClassName: string | null;
+  targetStreamName: string | null;
+  acknowledged: boolean;
+  acknowledgementCount: number;
+  createdAt: string;
+}
+
+// ---------------------------------------------------------------------------
+// Groups — DTOs
+// ---------------------------------------------------------------------------
+
+export interface GroupMemberDto {
+  userId: string;
+  fullName: string;
+  role: 'MEMBER' | 'ADMIN';
+  addedAt: string;
+}
+
+export interface GroupDto {
+  id: string;
+  type: string;
+  name: string;
+  description: string | null;
+  conversationId: string | null;
+  createdBy: string;
+  createdAt: string;
+  memberCount: number;
+  members?: GroupMemberDto[];
+}
+
+// ---------------------------------------------------------------------------
+// Dashboard — DTOs
+// ---------------------------------------------------------------------------
+
+export interface DashboardStatsDto {
+  totalStudents: number;
+  totalTeachers: number;
+  totalActiveAccounts: number;
+  totalSuspended: number;
+  totalPending: number;
+  totalGroups: number;
+  totalConversations: number;
+  totalAnnouncements: number;
+  recentAnnouncements: { id: string; title: string; authorName: string; publishedAt: string }[];
+  recentActivity: { action: string; actorName: string; at: string }[];
+}

@@ -88,6 +88,7 @@ export default function ChatListPage() {
               <p style={styles.subtitle}>{profile?.fullName}</p>
             </div>
             <div style={{ display: 'flex', gap: '0.25rem' }}>
+              <Link href="/announcements" style={styles.iconButton} title="Announcements">📢</Link>
               <Link href="/notifications" style={styles.iconButton} title="Notifications">🔔</Link>
               <button onClick={handleLogout} style={styles.iconButton} title="Sign out">⎋</button>
             </div>

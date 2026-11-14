@@ -13,7 +13,7 @@ Eight phases. Each phase has a definition of done and an acceptance gate. The ph
 | 5 | School Features | 2 wks | **Done** |
 | 6 | Security & Moderation | 2 wks | **Done** |
 | 7 | Mobile | 2 wks | **Done** |
-| 8 | Testing & Deployment | 2 wks | Not started |
+| 8 | Testing & Deployment | 2 wks | **Done** |
 | | **Total to MVP** | **~16 wks** | |
 
 ---
@@ -124,7 +124,7 @@ Eight phases. Each phase has a definition of done and an acceptance gate. The ph
 
 ---
 
-## Phase 8 — Testing & Deployment (next)
+## Phase 8 — Testing & Deployment (DONE)
 
 **Scope:** unit, integration, e2e, security, performance test suites; production-like staging; deployment runbook; release build.
 

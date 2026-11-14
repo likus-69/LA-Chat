@@ -1,0 +1,50 @@
+# Production overlay for docker-compose.yml
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+services:
+  db:
+    restart: always
+    ports: []  # Don't expose DB to host in production
+
+  redis:
+    restart: always
+    ports: []  # Don't expose Redis in production
+
+  minio:
+    restart: always
+    ports: []  # Don't expose MinIO in production
+
+  api:
+    restart: always
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.api
+    environment:
+      NODE_ENV: production
+    ports: []  # Only Caddy is exposed
+
+  web:
+    restart: always
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.web
+    environment:
+      NODE_ENV: production
+    ports: []  # Only Caddy is exposed
+
+  caddy:
+    image: caddy:2-alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/school-server/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+      - web
+
+volumes:
+  caddy_data:
+  caddy_config:

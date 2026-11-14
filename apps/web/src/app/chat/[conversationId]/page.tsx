@@ -298,6 +298,18 @@ export default function ConversationPage() {
     setVoiceRecording(false);
   }, []);
 
+  const handleReport = useCallback(async (messageId: string) => {
+    try {
+      await apiFetch('/moderation/reports', {
+        method: 'POST',
+        body: JSON.stringify({ reportedMessageId: messageId, category: 'OTHER', reason: 'Reported via chat' }),
+      });
+      alert('Message reported. A moderator will review it.');
+    } catch {
+      alert('Failed to report message');
+    }
+  }, []);
+
   if (loading) {
     return <main style={styles.page}><p style={styles.loading}>Loading conversation…</p></main>;
   }
@@ -361,6 +373,13 @@ export default function ConversationPage() {
                       </>
                     )}
                     {m.editedAt && !m.deletedAt && <span style={styles.editedTag}> (edited)</span>}
+                    {!m.deletedAt && m.senderId !== profile?.id && (
+                      <button
+                        style={styles.reportBtn}
+                        onClick={() => handleReport(m.id)}
+                        title="Report this message"
+                      >🚩</button>
+                    )}
                     <div style={styles.metaRow}>
                       <span style={styles.timestamp}>{formatTime(m.createdAt)}</span>
                       {m.reactions.length > 0 && (
@@ -513,6 +532,7 @@ const styles: Record<string, React.CSSProperties> = {
   messageBody: { fontSize: '0.95rem', lineHeight: 1.4, whiteSpace: 'pre-wrap' },
   deletedText: { fontSize: '0.9rem', fontStyle: 'italic', color: '#94a3b8' },
   editedTag: { fontSize: '0.7rem', color: '#94a3b8', marginLeft: '0.25rem' },
+  reportBtn: { background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.75rem', padding: '0 0.25rem', opacity: 0.5 },
   metaRow: { display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', justifyContent: 'flex-end' },
   timestamp: { fontSize: '0.7rem', opacity: 0.6 },
   reactionsRow: { display: 'flex', gap: '0.15rem' },

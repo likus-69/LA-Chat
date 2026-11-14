@@ -320,3 +320,36 @@ export const addGroupMemberSchema = z.object({
 export type CreateAnnouncementInput = z.infer<typeof createAnnouncementSchema>;
 export type CreateGroupInput = z.infer<typeof createGroupSchema>;
 export type AddGroupMemberInput = z.infer<typeof addGroupMemberSchema>;
+
+// Moderation
+export const reportCategorySchema = z.enum(['BULLYING', 'INAPPROPRIATE', 'SPAM', 'IMPERSONATION', 'THREAT', 'OTHER']);
+export const moderationActionTypeSchema = z.enum(['WARN', 'REMOVE_MESSAGE', 'SUSPEND_ACCOUNT', 'DISMISS']);
+
+export const createReportSchema = z.object({
+  reportedUserId: z.string().uuid().optional(),
+  reportedMessageId: z.string().uuid().optional(),
+  category: reportCategorySchema,
+  reason: z.string().min(3).max(1000),
+}).superRefine((val, ctx) => {
+  if (!val.reportedUserId && !val.reportedMessageId) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['reportedMessageId'], message: 'Must report a user or a message' });
+  }
+});
+
+export const takeModerationActionSchema = z.object({
+  action: moderationActionTypeSchema,
+  note: z.string().max(1000).optional(),
+});
+
+// Audit log query
+export const listAuditLogsSchema = z.object({
+  actorId: z.string().uuid().optional(),
+  action: z.string().optional(),
+  targetType: z.string().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(50),
+});
+
+export type CreateReportInput = z.infer<typeof createReportSchema>;
+export type TakeModerationActionInput = z.infer<typeof takeModerationActionSchema>;
+export type ListAuditLogsInput = z.infer<typeof listAuditLogsSchema>;

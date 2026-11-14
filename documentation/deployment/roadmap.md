@@ -11,7 +11,7 @@ Eight phases. Each phase has a definition of done and an acceptance gate. The ph
 | 3 | Messaging | 3 wks | **Done** |
 | 4 | Media & Notifications | 2 wks | **Done** |
 | 5 | School Features | 2 wks | **Done** |
-| 6 | Security & Moderation | 2 wks | Not started |
+| 6 | Security & Moderation | 2 wks | **Done** |
 | 7 | Mobile | 2 wks | Not started |
 | 8 | Testing & Deployment | 2 wks | Not started |
 | | **Total to MVP** | **~16 wks** | |
@@ -98,7 +98,7 @@ Eight phases. Each phase has a definition of done and an acceptance gate. The ph
 
 ---
 
-## Phase 6 — Security & Moderation (next)
+## Phase 6 — Security & Moderation (DONE)
 
 **Scope:** report-message/report-user, moderation queue, anti-spam, audit log UI, retention policies, DPPA 2019 review, threat model, penetration test plan.
 
@@ -111,7 +111,7 @@ Eight phases. Each phase has a definition of done and an acceptance gate. The ph
 
 ---
 
-## Phase 7 — Mobile
+## Phase 7 — Mobile (next)
 
 **Scope:** React Native + Expo apps for Android and iOS, push integration, offline queue, media picker, voice recorder, app store submission assets.
 

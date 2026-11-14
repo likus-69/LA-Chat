@@ -10,6 +10,8 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { GroupsModule } from './groups/groups.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { ModerationModule } from './moderation/moderation.module';
+import { AuditModule } from './audit/audit.module';
 import { RolesModule } from './roles/roles.module';
 import { HealthController } from './health.controller';
 
@@ -30,6 +32,8 @@ import { HealthController } from './health.controller';
     AnnouncementsModule,
     GroupsModule,
     DashboardModule,
+    ModerationModule,
+    AuditModule,
   ],
   controllers: [HealthController],
 })

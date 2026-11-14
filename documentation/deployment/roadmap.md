@@ -10,7 +10,7 @@ Eight phases. Each phase has a definition of done and an acceptance gate. The ph
 | 2 | Auth & Users | 2 wks | **Partial (this commit)** |
 | 3 | Messaging | 3 wks | **Done** |
 | 4 | Media & Notifications | 2 wks | **Done** |
-| 5 | School Features | 2 wks | Not started |
+| 5 | School Features | 2 wks | **Done** |
 | 6 | Security & Moderation | 2 wks | Not started |
 | 7 | Mobile | 2 wks | Not started |
 | 8 | Testing & Deployment | 2 wks | Not started |
@@ -86,7 +86,7 @@ Eight phases. Each phase has a definition of done and an acceptance gate. The ph
 
 ---
 
-## Phase 5 — School Features (next)
+## Phase 5 — School Features (DONE)
 
 **Scope:** announcements (with categories, priority, expiry, ack), subject/class/department/club groups, parent-teacher messaging, headteacher's dashboard widgets.
 
@@ -98,7 +98,7 @@ Eight phases. Each phase has a definition of done and an acceptance gate. The ph
 
 ---
 
-## Phase 6 — Security & Moderation
+## Phase 6 — Security & Moderation (next)
 
 **Scope:** report-message/report-user, moderation queue, anti-spam, audit log UI, retention policies, DPPA 2019 review, threat model, penetration test plan.
 

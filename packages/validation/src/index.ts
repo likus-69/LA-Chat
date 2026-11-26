@@ -95,6 +95,11 @@ export const updateProfileSchema = z.object({
   phone: phoneSchema,
 });
 
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: passwordSchema,
+});
+
 export const suspendUserSchema = z.object({
   reason: z.string().min(3).max(500),
 });
@@ -129,6 +134,7 @@ export type RegisterStaffInput = z.infer<typeof registerStaffSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RefreshInput = z.infer<typeof refreshSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type CreateClassInput = z.infer<typeof createClassSchema>;
 export type CreateStreamInput = z.infer<typeof createStreamSchema>;
 export type CreateSubjectInput = z.infer<typeof createSubjectSchema>;

@@ -214,8 +214,8 @@ model Permission {
 }
 
 model RolePermission {
-  roleId       String     @map("role_id")
-  permissionId String     @map("permission_id")
+  roleId       String     @map("role_id") @db.Uuid
+  permissionId String     @map("permission_id") @db.Uuid
   createdAt    DateTime   @default(now()) @map("created_at")
 
   role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
@@ -226,8 +226,8 @@ model RolePermission {
 }
 
 model UserRole {
-  userId    String   @map("user_id")
-  roleId    String   @map("role_id")
+  userId    String   @map("user_id") @db.Uuid
+  roleId    String   @map("role_id") @db.Uuid
   grantedBy String?  @map("granted_by") @db.Uuid
   grantedAt DateTime @default(now()) @map("granted_at")
 

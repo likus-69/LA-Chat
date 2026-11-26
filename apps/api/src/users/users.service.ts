@@ -1,7 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import * as argon2 from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
-import { AccountStatus, UserProfileDto, RoleName } from '@la-chat/shared-types';
+import {
+  AccountStatus,
+  ResetPasswordResultDto,
+  RoleName,
+  SessionDto,
+  UserProfileDto,
+} from '@la-chat/shared-types';
+import type { UpdateProfileInput } from '@la-chat/validation';
 import type { User, UserRole, Role, StudentProfile, StaffProfile } from '@prisma/client';
+import { generateTemporaryPassword } from './temp-password';
 
 export type UserWithRoles = User & { roles: (UserRole & { role: Role })[] };
 
@@ -119,6 +128,132 @@ export class UsersService {
     }));
 
     return { items, total, page, pageSize };
+  }
+
+  /** Update the caller's own profile fields (name, contact details). */
+  async updateOwnProfile(userId: string, input: UpdateProfileInput): Promise<UserProfileDto> {
+    if (input.email) {
+      const clash = await this.prisma.user.findFirst({
+        where: { email: input.email, id: { not: userId } },
+      });
+      if (clash) throw new ConflictException('Email already in use');
+    }
+    if (input.phone) {
+      const clash = await this.prisma.user.findFirst({
+        where: { phone: input.phone, id: { not: userId } },
+      });
+      if (clash) throw new ConflictException('Phone number already in use');
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(input.fullName ? { fullName: input.fullName } : {}),
+        ...(input.email !== undefined ? { email: input.email || null } : {}),
+        ...(input.phone !== undefined ? { phone: input.phone || null } : {}),
+      },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        actorId: userId,
+        action: 'user.update_profile',
+        targetType: 'user',
+        targetId: userId,
+      },
+    });
+
+    return this.getProfile(userId);
+  }
+
+  /** Active (non-revoked, unexpired) sessions for the caller's devices. */
+  async listSessions(userId: string, currentSessionId?: string): Promise<SessionDto[]> {
+    const rows = await this.prisma.userSession.findMany({
+      where: { userId, revokedAt: null, expiresAt: { gt: new Date() } },
+      orderBy: { createdAt: 'desc' },
+    });
+    return rows.map((s) => ({
+      id: s.id,
+      ipAddress: s.ipAddress,
+      userAgent: s.userAgent,
+      createdAt: s.createdAt.toISOString(),
+      expiresAt: s.expiresAt.toISOString(),
+      current: s.id === currentSessionId,
+    }));
+  }
+
+  /** Revoke one of the caller's own sessions (sign a device out). */
+  async revokeSession(userId: string, sessionId: string): Promise<{ ok: true }> {
+    const session = await this.prisma.userSession.findFirst({
+      where: { id: sessionId, userId },
+    });
+    if (!session) throw new NotFoundException('Session not found');
+
+    await this.prisma.userSession.update({
+      where: { id: sessionId },
+      data: { revokedAt: new Date() },
+    });
+    // audit_logs.target_id references users, so the entry is recorded against
+    // the account whose session was revoked.
+    await this.prisma.auditLog.create({
+      data: {
+        actorId: userId,
+        action: 'user.revoke_session',
+        targetType: 'user',
+        targetId: userId,
+      },
+    });
+    return { ok: true };
+  }
+
+  /** Revoke every session except the one making this request. */
+  async revokeOtherSessions(userId: string, currentSessionId?: string): Promise<{ revoked: number }> {
+    const res = await this.prisma.userSession.updateMany({
+      where: {
+        userId,
+        revokedAt: null,
+        ...(currentSessionId ? { id: { not: currentSessionId } } : {}),
+      },
+      data: { revokedAt: new Date() },
+    });
+    await this.prisma.auditLog.create({
+      data: {
+        actorId: userId,
+        action: 'user.revoke_other_sessions',
+        targetType: 'user',
+        targetId: userId,
+      },
+    });
+    return { revoked: res.count };
+  }
+
+  /**
+   * Administrative password reset. Issues a one-time temporary password (shown
+   * once to the administrator, who hands it to the account holder) and signs
+   * the account out everywhere.
+   */
+  async resetPassword(userId: string, actorId: string): Promise<ResetPasswordResultDto> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const temporaryPassword = generateTemporaryPassword();
+    const passwordHash = await argon2.hash(temporaryPassword, { type: argon2.argon2id });
+
+    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash } });
+    await this.prisma.userSession.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+    await this.prisma.auditLog.create({
+      data: {
+        actorId,
+        action: 'user.reset_password',
+        targetType: 'user',
+        targetId: userId,
+      },
+    });
+
+    return { userId, temporaryPassword };
   }
 
   async approve(userId: string, approverId: string): Promise<UserProfileDto> {

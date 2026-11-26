@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseUUIDPipe,
@@ -35,9 +36,28 @@ export class UsersController {
   async updateMe(@CurrentUser() user: AuthedUser, @Body() body: unknown) {
     const parsed = updateProfileSchema.safeParse(body);
     if (!parsed.success) throw new ZodValidationException(parsed.error);
-    // Update via prisma directly here for now; in a later phase this moves
-    // into the service.
-    return null; // placeholder — full impl in Phase 2 follow-up
+    return this.users.updateOwnProfile(user.id, parsed.data);
+  }
+
+  @Get('me/sessions')
+  @Permissions(Permission.USER_READ_SELF)
+  async mySessions(@CurrentUser() user: AuthedUser) {
+    return { items: await this.users.listSessions(user.id, user.sessionId) };
+  }
+
+  @Delete('me/sessions/:id')
+  @Permissions(Permission.USER_UPDATE_SELF)
+  async revokeSession(
+    @CurrentUser() user: AuthedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.users.revokeSession(user.id, id);
+  }
+
+  @Delete('me/sessions')
+  @Permissions(Permission.USER_UPDATE_SELF)
+  async revokeOtherSessions(@CurrentUser() user: AuthedUser) {
+    return this.users.revokeOtherSessions(user.id, user.sessionId);
   }
 
   @Get()
@@ -78,5 +98,11 @@ export class UsersController {
   @Permissions(Permission.USER_RESTORE)
   async restore(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() actor: AuthedUser) {
     return this.users.restore(id, actor.id);
+  }
+
+  @Post(':id/reset-password')
+  @Permissions(Permission.USER_RESET_PASSWORD)
+  async resetPassword(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() actor: AuthedUser) {
+    return this.users.resetPassword(id, actor.id);
   }
 }

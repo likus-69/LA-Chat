@@ -11,7 +11,12 @@ import {
 } from '@la-chat/shared-types';
 import { RolesService } from '../roles/roles.service';
 import { AuthedUser, JwtPayload } from './auth.types';
-import { LoginInput, RegisterStudentInput, RegisterStaffInput } from '@la-chat/validation';
+import {
+  ChangePasswordInput,
+  LoginInput,
+  RegisterStudentInput,
+  RegisterStaffInput,
+} from '@la-chat/validation';
 import {
   BadRequestException,
   ConflictException,
@@ -163,8 +168,8 @@ export class AuthService {
       status: user.status as AccountStatus,
     };
 
-    const accessToken = await this.jwt.signAsync(payload);
     const refreshToken = await this.issueRefreshToken(user.id, meta);
+    const accessToken = await this.jwt.signAsync({ ...payload, sid: refreshToken.id });
 
     const profile = await this.users.getProfile(user.id);
 
@@ -200,8 +205,8 @@ export class AuthService {
       roles,
       status: session.user.status as AccountStatus,
     };
-    const accessToken = await this.jwt.signAsync(payload);
     const newRefresh = await this.issueRefreshToken(session.user.id, meta);
+    const accessToken = await this.jwt.signAsync({ ...payload, sid: newRefresh.id });
 
     const profile = await this.users.getProfile(session.user.id);
 
@@ -261,9 +266,49 @@ export class AuthService {
     return n * mult;
   }
 
+  /**
+   * Change the caller's own password. Verifies the current password, then
+   * revokes every other session so a stolen device is signed out.
+   */
+  async changePassword(userId: string, input: ChangePasswordInput, currentSessionId?: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const ok = await argon2.verify(user.passwordHash, input.currentPassword);
+    if (!ok) throw new BadRequestException('Current password is incorrect');
+
+    const passwordHash = await argon2.hash(input.newPassword, { type: argon2.argon2id });
+    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash } });
+
+    await this.prisma.userSession.updateMany({
+      where: {
+        userId,
+        revokedAt: null,
+        ...(currentSessionId ? { id: { not: currentSessionId } } : {}),
+      },
+      data: { revokedAt: new Date() },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        actorId: userId,
+        action: 'user.change_password',
+        targetType: 'user',
+        targetId: userId,
+      },
+    });
+
+    return { ok: true };
+  }
+
   /** Used by JwtStrategy to rehydrate req.user. */
   async toAuthedUser(payload: JwtPayload): Promise<AuthedUser | null> {
     if (payload.status !== AccountStatus.ACTIVE) return null;
-    return { id: payload.sub, roles: payload.roles, status: payload.status };
+    return {
+      id: payload.sub,
+      roles: payload.roles,
+      status: payload.status,
+      sessionId: payload.sid,
+    };
   }
 }

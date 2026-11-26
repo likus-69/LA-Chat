@@ -86,8 +86,8 @@ CREATE TABLE "permissions" (
 
 -- CreateTable
 CREATE TABLE "role_permissions" (
-    "role_id" TEXT NOT NULL,
-    "permission_id" TEXT NOT NULL,
+    "role_id" UUID NOT NULL,
+    "permission_id" UUID NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "role_permissions_pkey" PRIMARY KEY ("role_id","permission_id")
@@ -95,8 +95,8 @@ CREATE TABLE "role_permissions" (
 
 -- CreateTable
 CREATE TABLE "user_roles" (
-    "user_id" TEXT NOT NULL,
-    "role_id" TEXT NOT NULL,
+    "user_id" UUID NOT NULL,
+    "role_id" UUID NOT NULL,
     "granted_by" UUID,
     "granted_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

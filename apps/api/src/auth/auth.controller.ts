@@ -2,6 +2,7 @@ import { Body, Controller, HttpCode, HttpStatus, Post, Req, UseGuards } from '@n
 import { Request } from 'express';
 import { AuthService } from './auth.service';
 import {
+  changePasswordSchema,
   loginSchema,
   refreshSchema,
   registerStaffSchema,
@@ -10,6 +11,9 @@ import {
 import { ZodValidationException } from '../common/zod-validation.exception';
 import { Throttle } from '../common/throttle.decorator';
 import { Public } from './public.decorator';
+import { JwtAuthGuard } from './jwt-auth.guard';
+import { CurrentUser } from '../users/current-user.decorator';
+import { AuthedUser } from './auth.types';
 
 @Controller('auth')
 export class AuthController {
@@ -67,5 +71,15 @@ export class AuthController {
     const parsed = refreshSchema.safeParse(body);
     if (!parsed.success) throw new ZodValidationException(parsed.error);
     return this.auth.logout(parsed.data.refreshToken);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Throttle({ limit: 10, windowSec: 60 })
+  @Post('change-password')
+  @HttpCode(HttpStatus.OK)
+  async changePassword(@CurrentUser() user: AuthedUser, @Body() body: unknown) {
+    const parsed = changePasswordSchema.safeParse(body);
+    if (!parsed.success) throw new ZodValidationException(parsed.error);
+    return this.auth.changePassword(user.id, parsed.data, user.sessionId);
   }
 }

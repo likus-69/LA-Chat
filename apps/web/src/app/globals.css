@@ -1,10 +1,14 @@
 :root {
-  /* Brand palette — placeholder. To be extracted from the official
-     Light Academy logo in Phase 2. These values are conservative and
-     accessible. */
-  --brand-primary: #1e3a5f;
-  --brand-primary-dark: #15294a;
-  --brand-accent: #d4a017;
+  /* Brand palette — extracted from the official Light Academy Secondary
+     School logo (November 2026).
+     - Navy Blue #2E3192: "SECONDARY SCHOOL" text, tagline, center figure, ring
+     - Red #ED1C24: "LIGHT ACADEMY" text, flanking figures
+     - Black #000000: logo background
+     The logo uses a serif (Times-style) font. */
+  --brand-primary: #2E3192;       /* Navy blue — main brand colour */
+  --brand-primary-dark: #1E2180;  /* Darker shade for hover/active states */
+  --brand-accent: #ED1C24;        /* Red — accent, CTAs, highlights */
+  --brand-accent-dark: #C0181E;   /* Darker red for hover */
   --brand-bg: #f7f9fc;
   --brand-bg-dark: #0f172a;
   --brand-text: #0f172a;
@@ -12,6 +16,7 @@
   --brand-border: #cbd5e1;
   --brand-error: #b91c1c;
   --brand-success: #15803d;
+  --brand-font-heading: 'Georgia', 'Times New Roman', serif;
 }
 
 * { box-sizing: border-box; }
@@ -19,7 +24,16 @@ html, body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFo
 button { font-family: inherit; }
 a { color: var(--brand-primary); }
 
+h1, h2, h3 {
+  font-family: var(--brand-font-heading);
+}
+
 .brand-motto {
   font-style: italic;
   color: var(--brand-text-muted);
+}
+
+.brand-logo {
+  max-height: 48px;
+  width: auto;
 }

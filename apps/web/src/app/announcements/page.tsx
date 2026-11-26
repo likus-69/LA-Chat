@@ -43,7 +43,7 @@ const EMPTY_FORM: NewAnnouncementForm = {
   audience: 'ALL',
 };
 
-export default function AnnouncementsPage() {
+export default function AnnouncementsPage(): React.JSX.Element {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfileDto | null>(null);
   const [announcements, setAnnouncements] = useState<AnnouncementDto[]>([]);
@@ -258,9 +258,9 @@ function priorityStyle(priority: string): React.CSSProperties {
   switch (priority) {
     case 'CRITICAL': return { background: '#dc2626', color: 'white' };
     case 'HIGH': return { background: '#ea580c', color: 'white' };
-    case 'NORMAL': return { background: '#1e3a5f', color: 'white' };
+    case 'NORMAL': return { background: '#2E3192', color: 'white' };
     case 'LOW': return { background: '#e2e8f0', color: '#475569' };
-    default: return { background: '#1e3a5f', color: 'white' };
+    default: return { background: '#2E3192', color: 'white' };
   }
 }
 
@@ -280,14 +280,14 @@ function formatDate(iso: string): string {
 const styles: Record<string, React.CSSProperties> = {
   page: { minHeight: '100vh', background: '#f0f2f5' },
   container: { maxWidth: '720px', margin: '0 auto', padding: '0' },
-  header: { display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem', background: '#1e3a5f', color: 'white' },
+  header: { display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem', background: '#2E3192', color: 'white' },
   backLink: { color: 'white', textDecoration: 'none', fontSize: '1.1rem' },
   title: { flex: 1, margin: 0, fontSize: '1.25rem', fontWeight: 700 },
   headerActions: { display: 'flex', gap: '0.5rem' },
-  primaryButton: { padding: '0.5rem 1rem', borderRadius: '6px', border: 'none', background: '#d4a017', color: '#1e3a5f', fontWeight: 700, cursor: 'pointer', fontSize: '0.85rem' },
+  primaryButton: { padding: '0.5rem 1rem', borderRadius: '6px', border: 'none', background: '#ED1C24', color: '#2E3192', fontWeight: 700, cursor: 'pointer', fontSize: '0.85rem' },
   outlineButton: { padding: '0.5rem 1rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.4)', background: 'transparent', color: 'white', cursor: 'pointer', fontSize: '0.85rem' },
   section: { background: 'white', margin: '0.75rem', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' },
-  sectionTitle: { margin: 0, padding: '0.75rem 1rem', fontSize: '0.95rem', color: '#1e3a5f', borderBottom: '1px solid #e2e8f0', fontWeight: 700 },
+  sectionTitle: { margin: 0, padding: '0.75rem 1rem', fontSize: '0.95rem', color: '#2E3192', borderBottom: '1px solid #e2e8f0', fontWeight: 700 },
   form: { padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' },
   row: { display: 'flex', gap: '0.75rem', flexWrap: 'wrap' },
   field: { display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1, minWidth: '120px' },
@@ -310,12 +310,12 @@ const styles: Record<string, React.CSSProperties> = {
   annAuthor: { fontSize: '0.78rem', color: '#64748b' },
   ackRow: { display: 'flex', alignItems: 'center', gap: '0.6rem' },
   ackCount: { fontSize: '0.75rem', color: '#94a3b8' },
-  ackButton: { padding: '0.35rem 0.75rem', borderRadius: '6px', border: '1px solid #1e3a5f', background: 'white', color: '#1e3a5f', fontWeight: 600, cursor: 'pointer', fontSize: '0.78rem' },
+  ackButton: { padding: '0.35rem 0.75rem', borderRadius: '6px', border: '1px solid #2E3192', background: 'white', color: '#2E3192', fontWeight: 600, cursor: 'pointer', fontSize: '0.78rem' },
   ackDone: { fontSize: '0.78rem', color: '#22c55e', fontWeight: 700 },
   empty: { padding: '2rem 1rem', textAlign: 'center', color: '#64748b' },
   emptyTitle: { fontSize: '0.95rem', fontWeight: 600, margin: '0 0 0.5rem' },
   emptyHint: { fontSize: '0.8rem', lineHeight: 1.4 },
   loading: { padding: '2rem', textAlign: 'center', color: '#64748b' },
   errorCard: { background: 'white', padding: '2rem', borderRadius: '12px', maxWidth: '420px', margin: '2rem auto', textAlign: 'center' },
-  link: { color: '#1e3a5f', textDecoration: 'none', display: 'inline-block', marginTop: '1rem' },
+  link: { color: '#2E3192', textDecoration: 'none', display: 'inline-block', marginTop: '1rem' },
 };

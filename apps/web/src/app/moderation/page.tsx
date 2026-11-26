@@ -45,7 +45,7 @@ const STATUS_COLORS: Record<ReportStatus, { bg: string; color: string }> = {
   DISMISSED: { bg: '#f1f5f9', color: '#475569' },
 };
 
-export default function ModerationPage() {
+export default function ModerationPage(): React.JSX.Element {
   const router = useRouter();
   const [reports, setReports] = useState<ReportDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -432,7 +432,7 @@ const styles: Record<string, React.CSSProperties> = {
   shell: { display: 'flex', flexDirection: 'column', width: '100%', minHeight: '100vh' },
   header: {
     display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 1.5rem',
-    background: '#1e3a5f', color: 'white', flexWrap: 'wrap',
+    background: '#2E3192', color: 'white', flexWrap: 'wrap',
   },
   backLink: { color: 'white', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 600 },
   title: { margin: 0, fontSize: '1.25rem', fontWeight: 700, flex: 1, minWidth: '180px' },
@@ -441,11 +441,11 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'rgba(255,255,255,0.15)', color: 'white', border: 'none',
     padding: '0.35rem 0.75rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem',
   },
-  filterBtnActive: { background: 'white', color: '#1e3a5f', fontWeight: 600 },
+  filterBtnActive: { background: 'white', color: '#2E3192', fontWeight: 600 },
   body: { display: 'flex', flex: 1, gap: '1rem', padding: '1rem 1.5rem', minHeight: 0 },
   listSection: { flex: '1 1 35%', minWidth: '320px', background: 'white', borderRadius: '12px', padding: '1rem', display: 'flex', flexDirection: 'column' },
   detailSection: { flex: '1 1 65%', minWidth: '400px', background: 'white', borderRadius: '12px', padding: '1rem', display: 'flex', flexDirection: 'column' },
-  sectionTitle: { margin: '0 0 0.75rem 0', fontSize: '1rem', color: '#1e3a5f', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem' },
+  sectionTitle: { margin: '0 0 0.75rem 0', fontSize: '1rem', color: '#2E3192', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem' },
   count: { fontSize: '0.85rem', fontWeight: 400, color: '#64748b' },
   empty: { textAlign: 'center', color: '#94a3b8', padding: '2rem', fontStyle: 'italic' },
   loading: { padding: '2rem', textAlign: 'center', color: '#64748b', margin: 'auto' },
@@ -455,10 +455,10 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0',
     cursor: 'pointer', transition: 'all 0.15s',
   },
-  reportItemSelected: { border: '2px solid #1e3a5f', background: '#f8fafc' },
+  reportItemSelected: { border: '2px solid #2E3192', background: '#f8fafc' },
   reportItemHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' },
   categoryBadge: {
-    background: '#1e3a5f', color: 'white', padding: '0.15rem 0.5rem',
+    background: '#2E3192', color: 'white', padding: '0.15rem 0.5rem',
     borderRadius: '4px', fontSize: '0.7rem', fontWeight: 600,
   },
   statusBadge: { padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 600 },
@@ -472,7 +472,7 @@ const styles: Record<string, React.CSSProperties> = {
   emptyDetail: { display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, color: '#94a3b8', fontStyle: 'italic' },
   detailCard: { display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%', overflow: 'auto' },
   detailHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' },
-  detailTitle: { margin: '0 0 0.5rem 0', fontSize: '1.15rem', color: '#1e3a5f' },
+  detailTitle: { margin: '0 0 0.5rem 0', fontSize: '1.15rem', color: '#2E3192' },
   closeBtn: { background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: '#64748b' },
   detailGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' },
   detailField: {},
@@ -483,13 +483,13 @@ const styles: Record<string, React.CSSProperties> = {
   actionHistory: {},
   actionList: { listStyle: 'none', margin: '0.25rem 0 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: '0.4rem' },
   actionItem: { padding: '0.5rem 0.75rem', background: '#f8fafc', borderRadius: '6px', fontSize: '0.85rem' },
-  actionType: { fontWeight: 600, color: '#1e3a5f', marginRight: '0.5rem' },
+  actionType: { fontWeight: 600, color: '#2E3192', marginRight: '0.5rem' },
   actionBy: { color: '#475569', marginRight: '0.5rem' },
   actionDate: { color: '#94a3b8', fontSize: '0.75rem' },
   actionNote: { margin: '0.25rem 0 0 0', color: '#475569', fontStyle: 'italic' },
   messageBlock: { background: '#fef3c7', padding: '0.75rem', borderRadius: '8px', border: '1px solid #fde68a' },
   viewMsgBtn: {
-    background: '#1e3a5f', color: 'white', border: 'none', padding: '0.5rem 1rem',
+    background: '#2E3192', color: 'white', border: 'none', padding: '0.5rem 1rem',
     borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600,
   },
   messagePreview: { marginTop: '0.75rem', padding: '0.75rem', background: 'white', borderRadius: '6px', border: '1px solid #e2e8f0' },

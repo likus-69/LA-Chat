@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { apiFetch, logout, isAuthenticated } from '@/lib/api';
 import type { UserProfileDto } from '@la-chat/shared-types';
 
-export default function DashboardPage() {
+export default function DashboardPage(): React.JSX.Element {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfileDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -116,13 +116,13 @@ const styles: Record<string, React.CSSProperties> = {
     boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
   },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem', gap: '1rem', flexWrap: 'wrap' },
-  title: { margin: 0, fontSize: '1.5rem', color: '#1e3a5f' },
+  title: { margin: 0, fontSize: '1.5rem', color: '#2E3192' },
   subtitle: { margin: 0, fontSize: '0.85rem', color: '#475569' },
   section: { marginBottom: '2rem' },
-  sectionTitle: { fontSize: '1.05rem', color: '#1e3a5f', marginBottom: '0.75rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem' },
+  sectionTitle: { fontSize: '1.05rem', color: '#2E3192', marginBottom: '0.75rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem' },
   dl: { display: 'grid', gridTemplateColumns: 'max-content 1fr', gap: '0.5rem 1rem', margin: 0 },
-  button: { padding: '0.5rem 1rem', borderRadius: '6px', border: 'none', background: '#1e3a5f', color: 'white', cursor: 'pointer' },
-  outlineButton: { padding: '0.5rem 1rem', borderRadius: '6px', border: '1px solid #cbd5e1', background: 'white', color: '#1e3a5f', cursor: 'pointer' },
+  button: { padding: '0.5rem 1rem', borderRadius: '6px', border: 'none', background: '#2E3192', color: 'white', cursor: 'pointer' },
+  outlineButton: { padding: '0.5rem 1rem', borderRadius: '6px', border: '1px solid #cbd5e1', background: 'white', color: '#2E3192', cursor: 'pointer' },
   muted: { color: '#475569', lineHeight: 1.5 },
-  chatLink: { display: 'inline-block', marginTop: '0.75rem', padding: '0.6rem 1.25rem', background: '#1e3a5f', color: 'white', borderRadius: '8px', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' },
+  chatLink: { display: 'inline-block', marginTop: '0.75rem', padding: '0.6rem 1.25rem', background: '#2E3192', color: 'white', borderRadius: '8px', textDecoration: 'none', fontWeight: 600, fontSize: '0.9rem' },
 };

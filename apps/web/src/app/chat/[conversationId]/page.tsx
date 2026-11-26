@@ -16,7 +16,7 @@ import {
   WsServerEvent,
 } from '@la-chat/shared-types';
 
-export default function ConversationPage() {
+export default function ConversationPage(): React.JSX.Element {
   const params = useParams<{ conversationId: string }>();
   const router = useRouter();
   const conversationId = params.conversationId;
@@ -517,7 +517,7 @@ const attStyles: Record<string, React.CSSProperties> = {
 const styles: Record<string, React.CSSProperties> = {
   page: { minHeight: '100vh', background: '#f0f2f5', display: 'flex' },
   chatShell: { display: 'flex', flexDirection: 'column', width: '100%', height: '100vh' },
-  header: { display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', background: '#1e3a5f', color: 'white', borderBottom: '1px solid #15294a' },
+  header: { display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', background: '#2E3192', color: 'white', borderBottom: '1px solid #1E2180' },
   backLink: { color: 'white', textDecoration: 'none', fontSize: '1.25rem', fontWeight: 700 },
   headerTitleBlock: { flex: 1, minWidth: 0 },
   headerTitle: { margin: 0, fontSize: '1rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
@@ -526,9 +526,9 @@ const styles: Record<string, React.CSSProperties> = {
   messagesArea: { flex: 1, overflow: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' },
   messageRow: { display: 'flex', width: '100%' },
   bubble: { maxWidth: '70%', padding: '0.5rem 0.75rem', borderRadius: '12px', wordBreak: 'break-word' },
-  bubbleOwn: { background: '#1e3a5f', color: 'white', borderBottomRightRadius: '4px' },
+  bubbleOwn: { background: '#2E3192', color: 'white', borderBottomRightRadius: '4px' },
   bubbleTheirs: { background: 'white', color: '#0f172a', borderBottomLeftRadius: '4px', border: '1px solid #e2e8f0' },
-  senderName: { fontSize: '0.75rem', fontWeight: 600, color: '#1e3a5f', marginBottom: '0.15rem' },
+  senderName: { fontSize: '0.75rem', fontWeight: 600, color: '#2E3192', marginBottom: '0.15rem' },
   messageBody: { fontSize: '0.95rem', lineHeight: 1.4, whiteSpace: 'pre-wrap' },
   deletedText: { fontSize: '0.9rem', fontStyle: 'italic', color: '#94a3b8' },
   editedTag: { fontSize: '0.7rem', color: '#94a3b8', marginLeft: '0.25rem' },
@@ -540,16 +540,16 @@ const styles: Record<string, React.CSSProperties> = {
   typingIndicator: { fontSize: '0.8rem', color: '#64748b', fontStyle: 'italic', padding: '0 0.5rem' },
   emptyMessages: { textAlign: 'center', color: '#94a3b8', padding: '2rem', margin: 'auto' },
   composer: { display: 'flex', gap: '0.5rem', padding: '0.75rem', background: 'white', borderTop: '1px solid #e2e8f0', alignItems: 'center' },
-  composerButton: { background: 'transparent', border: 'none', fontSize: '1.4rem', cursor: 'pointer', padding: '0.25rem 0.5rem', color: '#1e3a5f', flexShrink: 0 },
+  composerButton: { background: 'transparent', border: 'none', fontSize: '1.4rem', cursor: 'pointer', padding: '0.25rem 0.5rem', color: '#2E3192', flexShrink: 0 },
   recordingIndicator: { fontSize: '0.85rem', color: '#b91c1c', fontWeight: 600 },
   textarea: { flex: 1, padding: '0.6rem 0.75rem', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.95rem', fontFamily: 'inherit', resize: 'none', outline: 'none', minHeight: '40px', maxHeight: '120px' },
-  sendButton: { padding: '0.6rem 1.25rem', background: '#1e3a5f', color: 'white', border: 'none', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer', flexShrink: 0 },
+  sendButton: { padding: '0.6rem 1.25rem', background: '#2E3192', color: 'white', border: 'none', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer', flexShrink: 0 },
   uploadBar: { padding: '0.5rem 1rem', background: '#f1f5f9', display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.8rem', color: '#475569' },
   uploadProgressTrack: { height: '4px', background: '#e2e8f0', borderRadius: '2px', overflow: 'hidden' },
-  uploadProgressFill: { height: '100%', background: '#1e3a5f', transition: 'width 0.2s' },
+  uploadProgressFill: { height: '100%', background: '#2E3192', transition: 'width 0.2s' },
   voiceErrorBar: { padding: '0.5rem 1rem', background: '#fef2f2', color: '#b91c1c', fontSize: '0.8rem' },
   attachmentsRow: { display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.25rem' },
   loading: { padding: '2rem', textAlign: 'center', color: '#64748b', margin: 'auto' },
   errorCard: { background: 'white', padding: '2rem', borderRadius: '12px', maxWidth: '420px', margin: 'auto', textAlign: 'center' },
-  link: { color: '#1e3a5f', textDecoration: 'none', display: 'inline-block', marginTop: '1rem' },
+  link: { color: '#2E3192', textDecoration: 'none', display: 'inline-block', marginTop: '1rem' },
 };

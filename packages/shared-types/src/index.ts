@@ -315,6 +315,26 @@ export interface RefreshDto {
 }
 
 // ---------------------------------------------------------------------------
+// Account self-service DTOs
+// ---------------------------------------------------------------------------
+
+export interface SessionDto {
+  id: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: string;
+  expiresAt: string;
+  /** True for the session that made the request. */
+  current: boolean;
+}
+
+export interface ResetPasswordResultDto {
+  userId: string;
+  /** Temporary password shown once to the administrator. */
+  temporaryPassword: string;
+}
+
+// ---------------------------------------------------------------------------
 // Messaging — DTOs
 // ---------------------------------------------------------------------------
 

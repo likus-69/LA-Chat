@@ -61,7 +61,10 @@ export default function DashboardPage() {
             <h1 style={styles.title}>Welcome, {profile?.fullName}</h1>
             <p style={styles.subtitle}>Light Academy Secondary School</p>
           </div>
-          <button onClick={handleLogout} style={styles.outlineButton}>Sign out</button>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <Link href="/profile" style={styles.outlineButton}>Profile</Link>
+            <button onClick={handleLogout} style={styles.outlineButton}>Sign out</button>
+          </div>
         </div>
 
         <section style={styles.section}>

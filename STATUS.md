@@ -1,6 +1,6 @@
 # LA Chat — Development Status
 
-**Last updated:** 2026-11-12
+**Last updated:** 2026-11-26
 **Live source of truth for what works, what is partial, and what is still to build.** Per spec §26, this file is updated at every milestone.
 
 ---
@@ -10,7 +10,7 @@
 | Phase | Status | Notes |
 |---|---|---|
 | 1. Foundation | ✅ Done | Repo, stack, design tokens, Docker Compose, app shells. |
-| 2. Auth & Users | 🟡 Partial | Auth, RBAC, profiles, classes/streams/subjects done. MFA, CSV import, session UI pending. |
+| 2. Auth & Users | 🟡 Partial | Auth, RBAC, profile editing, password change/reset, session & device management done. MFA, CSV import/export pending. |
 | 3. Messaging | ✅ Done | Real-time WebSocket messaging, conversations, reactions, edit/delete, read receipts, search. |
 | 4. Media & Notifications | ✅ Done | File upload (image/doc/voice/video), signed URLs, in-app notification centre, push scaffolding (FCM/APNs). |
 | 5. School Features | ✅ Done | Announcements, groups (auto-membership), dashboard stats. |
@@ -67,6 +67,10 @@ pnpm --filter @la-chat/api test                    # ✓ 10/10 tests pass
 - **Role → permission seeding** — `RolesService.onModuleInit()` upserts the canonical `ROLE_PERMISSIONS` map into the DB on boot.
 - **Users API** — `/users/me`, `/users` (paginated, filter by role/status), `/users/:id/approve`, `/users/:id/suspend`, `/users/:id/restore`. Audit log entries written for each admin action.
 - **Academic API** — CRUD for classes (S1–S6), streams, subjects. Authenticated read for all; write requires `class.manage` / `subject.manage`.
+- **Profile editing** — `PATCH /users/me` updates full name, email and phone with uniqueness checks and an audit-log entry. Web UI at `/profile`.
+- **Password change** — `POST /auth/change-password` verifies the current password, enforces the password policy, and revokes every other session.
+- **Administrative password reset** — `POST /users/:id/reset-password` (permission `user.reset_password`) issues a one-time readable temporary password, signs the account out everywhere and records an audit entry. Used for students without email.
+- **Session & device management** — access tokens now carry the issuing session id (`sid`). `GET /users/me/sessions` lists active sessions, `DELETE /users/me/sessions/:id` signs one device out, `DELETE /users/me/sessions` signs out all other devices. Exposed in the `/profile` page.
 - **Rate limiting** — `@Throttle({ limit, windowSec })` decorator + `ThrottleGuard` on auth endpoints (10/min per IP).
 - **Input validation** — Zod schemas in `@la-chat/validation`, validated in controllers via `ZodValidationException`.
 - **Swagger UI** — available at `GET /docs`.
@@ -77,10 +81,8 @@ pnpm --filter @la-chat/api test                    # ✓ 10/10 tests pass
 
 - ⏳ **MFA for privileged accounts** — schema has `mfa_secret` column; enforcement not implemented.
 - ⏳ **CSV import / export** — `user.import_csv` / `user.export_csv` permissions exist; endpoint not implemented.
-- ⏳ **Session management UI** — `user_sessions` table exists; no UI to view/revoke sessions.
-- ⏳ **Device management** — `devices` table exists; no registration flow.
-- ⏳ **Password reset flow** — endpoint not implemented (will use a printed code for students without email).
-- ⏳ **Profile editing** — `PATCH /users/me` is a stub (returns null).
+- ⏳ **Device registration** — `devices` table exists and sessions reference it; push-token registration is Phase 4, but there is no user-facing device naming/removal flow beyond session revocation.
+- ⏳ **Self-service password reset** — only the administrative reset exists (no email/SMS delivery channel configured). A self-service flow needs an email or SMS provider.
 - ⏳ **Official logo extraction** — brand palette is a placeholder; needs the real logo asset from the school.
 
 ### Verification (run by the developer with Docker)
@@ -175,6 +177,16 @@ pnpm -w dev:web    # http://localhost:3000/chat
 
 ---
 
+## Database & build fixes (2026-11-26)
+
+A fresh database could not be provisioned before this milestone. Fixed and verified end to end:
+
+- `20261101000000_enable_citext` — the schema uses `CITEXT` for `users.email` but no migration created the extension, so `prisma migrate deploy` failed with `type "citext" does not exist`. The new migration runs first (alphabetical order) and is idempotent.
+- `20261111000000_init` — `role_permissions` and `user_roles` declared their join columns as `TEXT` while `roles.id` / `users.id` / `permissions.id` are `UUID`, so the foreign keys could not be created. Schema now declares `@db.Uuid` on those fields and the init migration matches.
+- `pnpm-lock.yaml` — regenerated so `pnpm install --frozen-lockfile` succeeds; it previously failed because `apps/mobile/package.json` was not represented in the lockfile.
+
+Verification: empty Postgres volume → 4 migrations applied → seed loaded → API booted (`/health` 200) → web app served.
+
 ## Open compliance items
 
 - ⏳ **Uganda DPPA 2019 review** — must be completed before declaring production-ready. Tracked here; owner: school's Data Protection Officer (to be designated).
@@ -185,7 +197,7 @@ pnpm -w dev:web    # http://localhost:3000/chat
 
 ## Known limitations
 
-1. **No real-time messaging yet.** The WebSocket gateway is planned for Phase 3. Today the API is REST-only.
+1. **Admin console is read-only.** The `/dashboard` web page shows account summary only; user management, academic management and the moderation queue are API-only so far.
 2. **ThrottleGuard is in-memory per process.** Sufficient for a single-server deployment; will move to Redis when (if) we go multi-instance.
 3. **No mobile apps.** Phase 7.
 4. **MinIO backup script is a template.** The `mc mirror` invocation needs a real config; left as a TODO from Phase 6.
@@ -195,13 +207,12 @@ pnpm -w dev:web    # http://localhost:3000/chat
 
 ## What to do next
 
-Per `documentation/deployment/roadmap.md`, the next milestone is **Phase 3 — Messaging**:
+Phases 1–8 are implemented at the API level. The remaining gaps are mostly user-facing and are ordered by risk:
 
-1. WebSocket gateway in the API (`@WebSocketGateway`).
-2. Message send/receive with idempotency on `client_message_id`.
-3. Conversation list + history endpoints (cursor pagination).
-4. Read receipts + delivery status.
-5. Message reactions, edit, delete, reply, forward.
-6. Postgres `tsvector` full-text search on `messages.body`, gated by `message.search` permission.
+1. **Administration console** (spec §16) — user management (approve/suspend/reset password/CSV import-export), academic management, announcement management and the moderation queue in the web UI. Today these exist only as API endpoints.
+2. **Phase 2 leftovers** — MFA (TOTP) for privileged accounts, CSV import/export endpoints, official logo palette extraction.
+3. **Phase 3 leftovers** — message forwarding, pinned messages, group management UI (rename/add/remove members/picture/description).
+4. **Message search UI** and shared-document search in the web app.
+5. **Parent portal** — guardian linkage UI and the restricted parent view.
 
-When Phase 3 is complete, update this file.
+When a milestone is complete, update this file (spec §26).

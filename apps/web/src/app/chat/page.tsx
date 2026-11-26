@@ -90,6 +90,7 @@ export default function ChatListPage() {
             <div style={{ display: 'flex', gap: '0.25rem' }}>
               <Link href="/announcements" style={styles.iconButton} title="Announcements">📢</Link>
               <Link href="/notifications" style={styles.iconButton} title="Notifications">🔔</Link>
+              <Link href="/profile" style={styles.iconButton} title="Profile">👤</Link>
               <button onClick={handleLogout} style={styles.iconButton} title="Sign out">⎋</button>
             </div>
           </div>

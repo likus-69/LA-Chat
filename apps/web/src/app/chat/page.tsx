@@ -7,7 +7,7 @@ import { apiFetch, ApiError, isAuthenticated, logout } from '@/lib/api';
 import { getMessagingSocket } from '@/lib/ws';
 import type { ConversationListItemDto, UserProfileDto } from '@la-chat/shared-types';
 
-export default function ChatListPage() {
+export default function ChatListPage(): React.JSX.Element {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfileDto | null>(null);
   const [conversations, setConversations] = useState<ConversationListItemDto[]>([]);
@@ -154,7 +154,7 @@ const styles: Record<string, React.CSSProperties> = {
   page: { minHeight: '100vh', background: '#f0f2f5', display: 'flex' },
   container: { display: 'flex', width: '100%', height: '100vh' },
   sidebar: { width: '340px', background: 'white', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', flexShrink: 0 },
-  sidebarHeader: { padding: '1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#1e3a5f', color: 'white' },
+  sidebarHeader: { padding: '1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#2E3192', color: 'white' },
   title: { margin: 0, fontSize: '1.25rem', fontWeight: 700 },
   subtitle: { margin: 0, fontSize: '0.8rem', opacity: 0.8 },
   iconButton: { background: 'transparent', border: 'none', color: 'white', fontSize: '1.25rem', cursor: 'pointer', padding: '0.25rem 0.5rem' },
@@ -165,16 +165,16 @@ const styles: Record<string, React.CSSProperties> = {
   conversationTopRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.15rem' },
   conversationTitle: { fontSize: '0.95rem', fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
   conversationPreview: { fontSize: '0.85rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-  unreadBadge: { background: '#1e3a5f', color: 'white', fontSize: '0.7rem', fontWeight: 700, borderRadius: '10px', padding: '0.1rem 0.45rem', minWidth: '20px', textAlign: 'center' },
+  unreadBadge: { background: '#2E3192', color: 'white', fontSize: '0.7rem', fontWeight: 700, borderRadius: '10px', padding: '0.1rem 0.45rem', minWidth: '20px', textAlign: 'center' },
   empty: { padding: '2rem 1rem', textAlign: 'center', color: '#64748b' },
   emptyTitle: { fontSize: '0.95rem', fontWeight: 600, margin: '0 0 0.5rem' },
   emptyHint: { fontSize: '0.8rem', lineHeight: 1.4 },
   mainPanel: { flex: 1, display: 'grid', placeItems: 'center', background: '#f0f2f5' },
   welcomeState: { textAlign: 'center', padding: '2rem' },
-  welcomeLogo: { width: '72px', height: '72px', borderRadius: '16px', background: '#1e3a5f', color: '#d4a017', display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: '2rem', margin: '0 auto 1rem' },
-  welcomeTitle: { fontSize: '1.5rem', color: '#1e3a5f', margin: '0 0 0.5rem' },
+  welcomeLogo: { width: '72px', height: '72px', borderRadius: '16px', background: '#2E3192', color: '#ED1C24', display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: '2rem', margin: '0 auto 1rem' },
+  welcomeTitle: { fontSize: '1.5rem', color: '#2E3192', margin: '0 0 0.5rem' },
   welcomeText: { color: '#64748b', margin: '0 0 1rem' },
   motto: { fontStyle: 'italic', color: '#94a3b8', fontSize: '0.85rem' },
   card: { background: 'white', padding: '2rem', borderRadius: '12px', maxWidth: '420px' },
-  button: { padding: '0.5rem 1rem', borderRadius: '6px', border: 'none', background: '#1e3a5f', color: 'white', cursor: 'pointer' },
+  button: { padding: '0.5rem 1rem', borderRadius: '6px', border: 'none', background: '#2E3192', color: 'white', cursor: 'pointer' },
 };

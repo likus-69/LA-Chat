@@ -14,7 +14,7 @@ interface NotificationList {
   pageSize: number;
 }
 
-export default function NotificationsPage() {
+export default function NotificationsPage(): React.JSX.Element {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfileDto | null>(null);
   const [notifications, setNotifications] = useState<NotificationDto[]>([]);
@@ -179,13 +179,13 @@ function formatTime(iso: string): string {
 const styles: Record<string, React.CSSProperties> = {
   page: { minHeight: '100vh', background: '#f0f2f5' },
   container: { maxWidth: '640px', margin: '0 auto', padding: '0' },
-  header: { display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem', background: '#1e3a5f', color: 'white' },
+  header: { display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem', background: '#2E3192', color: 'white' },
   backLink: { color: 'white', textDecoration: 'none', fontSize: '1.1rem' },
   title: { flex: 1, margin: 0, fontSize: '1.25rem', fontWeight: 700 },
   headerActions: { display: 'flex', gap: '0.5rem' },
   outlineButton: { padding: '0.4rem 0.75rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.3)', background: 'transparent', color: 'white', cursor: 'pointer', fontSize: '0.8rem' },
   section: { background: 'white', margin: '0.75rem', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' },
-  sectionTitle: { margin: 0, padding: '0.75rem 1rem', fontSize: '0.95rem', color: '#1e3a5f', borderBottom: '1px solid #e2e8f0' },
+  sectionTitle: { margin: 0, padding: '0.75rem 1rem', fontSize: '0.95rem', color: '#2E3192', borderBottom: '1px solid #e2e8f0' },
   prefRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem' },
   prefLabel: { display: 'block', fontSize: '0.95rem', fontWeight: 600, color: '#0f172a' },
   prefValue: { display: 'block', fontSize: '0.8rem', color: '#64748b' },
@@ -202,11 +202,11 @@ const styles: Record<string, React.CSSProperties> = {
   notifTitle: { fontSize: '0.9rem', fontWeight: 600, color: '#0f172a' },
   notifPreview: { fontSize: '0.85rem', color: '#64748b', marginTop: '0.15rem' },
   notifTime: { fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem' },
-  unreadDot: { width: '8px', height: '8px', borderRadius: '50%', background: '#1e3a5f', flexShrink: 0, marginTop: '0.4rem' },
+  unreadDot: { width: '8px', height: '8px', borderRadius: '50%', background: '#2E3192', flexShrink: 0, marginTop: '0.4rem' },
   empty: { padding: '2rem 1rem', textAlign: 'center', color: '#64748b' },
   emptyTitle: { fontSize: '0.95rem', fontWeight: 600, margin: '0 0 0.5rem' },
   emptyHint: { fontSize: '0.8rem', lineHeight: 1.4 },
   loading: { padding: '2rem', textAlign: 'center', color: '#64748b' },
   errorCard: { background: 'white', padding: '2rem', borderRadius: '12px', maxWidth: '420px', margin: '2rem auto', textAlign: 'center' },
-  link: { color: '#1e3a5f', textDecoration: 'none', display: 'inline-block', marginTop: '1rem' },
+  link: { color: '#2E3192', textDecoration: 'none', display: 'inline-block', marginTop: '1rem' },
 };

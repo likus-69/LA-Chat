@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { login, ApiError } from '@/lib/api';
 
-export default function LoginPage() {
+export default function LoginPage(): React.JSX.Element {
   const router = useRouter();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -35,7 +35,8 @@ export default function LoginPage() {
     <main style={styles.page}>
       <div style={styles.card}>
         <div style={styles.brandRow}>
-          <div style={styles.logo}>LA</div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="Light Academy" style={styles.logoImg} />
           <div>
             <h1 style={styles.title}>LA Chat</h1>
             <p style={styles.subtitle}>Light Academy Secondary School</p>
@@ -89,7 +90,7 @@ const styles: Record<string, React.CSSProperties> = {
     minHeight: '100vh',
     display: 'grid',
     placeItems: 'center',
-    background: 'linear-gradient(135deg, #1e3a5f 0%, #15294a 100%)',
+    background: 'linear-gradient(135deg, #2E3192 0%, #1E2180 100%)',
     padding: '1rem',
   },
   card: {
@@ -101,18 +102,13 @@ const styles: Record<string, React.CSSProperties> = {
     maxWidth: '420px',
   },
   brandRow: { display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' },
-  logo: {
-    width: '48px',
-    height: '48px',
-    borderRadius: '10px',
-    background: '#1e3a5f',
-    color: '#d4a017',
-    display: 'grid',
-    placeItems: 'center',
-    fontWeight: 700,
-    fontSize: '1.25rem',
+  logoImg: {
+    width: '56px',
+    height: '56px',
+    borderRadius: '8px',
+    objectFit: 'cover',
   },
-  title: { margin: 0, fontSize: '1.5rem', color: '#1e3a5f' },
+  title: { margin: 0, fontSize: '1.5rem', color: '#2E3192', fontFamily: 'Georgia, serif' },
   subtitle: { margin: 0, fontSize: '0.85rem', color: '#475569' },
   motto: { margin: '0.5rem 0 1.5rem', fontSize: '0.85rem' },
   form: { display: 'flex', flexDirection: 'column', gap: '1rem' },
@@ -130,7 +126,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '0.75rem',
     borderRadius: '6px',
     border: 'none',
-    background: '#1e3a5f',
+    background: '#2E3192',
     color: 'white',
     fontSize: '1rem',
     fontWeight: 600,

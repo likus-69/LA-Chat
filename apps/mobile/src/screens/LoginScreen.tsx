@@ -65,16 +65,16 @@ export function LoginScreen({ onLogin }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', backgroundColor: '#1e3a5f', padding: 20 },
+  container: { flex: 1, justifyContent: 'center', backgroundColor: '#2E3192', padding: 20 },
   card: { backgroundColor: 'white', borderRadius: 16, padding: 28 },
   logoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 4 },
-  logo: { width: 48, height: 48, borderRadius: 12, backgroundColor: '#1e3a5f', justifyContent: 'center', alignItems: 'center' },
-  logoText: { color: '#d4a017', fontSize: 20, fontWeight: '700' },
-  title: { fontSize: 24, fontWeight: '700', color: '#1e3a5f' },
+  logo: { width: 48, height: 48, borderRadius: 12, backgroundColor: '#2E3192', justifyContent: 'center', alignItems: 'center' },
+  logoText: { color: '#ED1C24', fontSize: 20, fontWeight: '700' },
+  title: { fontSize: 24, fontWeight: '700', color: '#2E3192' },
   subtitle: { fontSize: 13, color: '#64748b' },
   motto: { fontStyle: 'italic', color: '#94a3b8', fontSize: 13, marginBottom: 20 },
   input: { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, padding: 12, fontSize: 16, marginBottom: 12 },
-  button: { backgroundColor: '#1e3a5f', borderRadius: 8, padding: 14, alignItems: 'center', marginTop: 4 },
+  button: { backgroundColor: '#2E3192', borderRadius: 8, padding: 14, alignItems: 'center', marginTop: 4 },
   buttonDisabled: { opacity: 0.5 },
   buttonText: { color: 'white', fontSize: 16, fontWeight: '600' },
 });

@@ -98,7 +98,7 @@ export function ChatListScreen({ user, onLogout }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#1e3a5f' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#2E3192' },
   headerTitle: { color: '#fff', fontSize: 20, fontWeight: '700' },
   headerSubtitle: { color: 'rgba(255,255,255,0.7)', fontSize: 13 },
   iconBtn: { fontSize: 22, color: '#fff', paddingHorizontal: 8 },
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   body: { flex: 1 },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 },
   title: { fontSize: 16, fontWeight: '600', color: '#0f172a', flex: 1 },
-  badge: { backgroundColor: '#1e3a5f', borderRadius: 10, minWidth: 20, paddingHorizontal: 6, paddingVertical: 2 },
+  badge: { backgroundColor: '#2E3192', borderRadius: 10, minWidth: 20, paddingHorizontal: 6, paddingVertical: 2 },
   badgeText: { color: '#fff', fontSize: 11, fontWeight: '700', textAlign: 'center' },
   preview: { fontSize: 14, color: '#64748b' },
   separator: { height: 1, backgroundColor: '#f1f5f9', marginLeft: 72 },

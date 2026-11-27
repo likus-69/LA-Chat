@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -8,14 +9,20 @@ import {
   Patch,
   Post,
   Query,
+  Res,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Permissions } from '../roles/permissions.decorator';
 import { PermissionsGuard } from '../roles/permissions.guard';
 import { Permission, RoleName, AccountStatus } from '@la-chat/shared-types';
 import { CurrentUser } from './current-user.decorator';
 import { UsersService } from './users.service';
+import { CsvImportService } from './csv-import.service';
 import { suspendUserSchema, updateProfileSchema } from '@la-chat/validation';
 import { ZodValidationException } from '../common/zod-validation.exception';
 import { AuthedUser } from '../auth/auth.types';
@@ -23,7 +30,10 @@ import { AuthedUser } from '../auth/auth.types';
 @Controller('users')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class UsersController {
-  constructor(private users: UsersService) {}
+  constructor(
+    private users: UsersService,
+    private csvImport: CsvImportService,
+  ) {}
 
   @Get('me')
   @Permissions(Permission.USER_READ_SELF)
@@ -74,6 +84,33 @@ export class UsersController {
       page: page ? parseInt(page, 10) : 1,
       pageSize: pageSize ? parseInt(pageSize, 10) : 20,
     });
+  }
+
+  @Post('import')
+  @Permissions(Permission.USER_IMPORT_CSV)
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }))
+  async importUsers(@UploadedFile() file: Express.Multer.File, @CurrentUser() actor: AuthedUser) {
+    if (!file) throw new BadRequestException('No file uploaded');
+    const csvText = file.buffer.toString('utf-8');
+    return this.csvImport.importUsers(csvText, actor.id);
+  }
+
+  @Get('import/template')
+  @Permissions(Permission.USER_IMPORT_CSV)
+  async importTemplate(@Res() res: Response) {
+    const csv = this.csvImport.getTemplateCsv();
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="la-chat-import-template.csv"');
+    res.send(csv);
+  }
+
+  @Get('export')
+  @Permissions(Permission.USER_EXPORT_CSV)
+  async exportUsers(@Res() res: Response, @Query('role') role?: string, @Query('status') status?: string) {
+    const csv = await this.csvImport.exportUsersCsv({ role, status });
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="la-chat-users.csv"');
+    res.send(csv);
   }
 
   @Post(':id/approve')

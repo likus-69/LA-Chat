@@ -1,6 +1,6 @@
 # LA Chat — Development Status
 
-**Last updated:** 2026-11-26
+**Last updated:** 2026-11-27
 **Live source of truth for what works, what is partial, and what is still to build.** Per spec §26, this file is updated at every milestone.
 
 ---
@@ -10,13 +10,13 @@
 | Phase | Status | Notes |
 |---|---|---|
 | 1. Foundation | ✅ Done | Repo, stack, design tokens, Docker Compose, app shells. |
-| 2. Auth & Users | 🟡 Partial | Auth, RBAC, profile editing, password change/reset, session & device management done. MFA, CSV import/export pending. |
+| 2. Auth & Users | 🟡 Partial | Auth, RBAC, profile editing, password change/reset, session & device management, CSV import/export done. MFA pending. |
 | 3. Messaging | ✅ Done | Real-time WebSocket messaging, conversations, reactions, edit/delete, read receipts, search. |
 | 4. Media & Notifications | ✅ Done | File upload (image/doc/voice/video), signed URLs, in-app notification centre, push scaffolding (FCM/APNs). |
 | 5. School Features | ✅ Done | Announcements, groups (auto-membership), dashboard stats. |
 | 6. Security & Moderation | ✅ Done | Report message/user, moderation queue, audit log viewer, DPPA review, threat model. |
 | 7. Mobile | ✅ Done | Expo/React Native app: login, chat list, real-time chat, announcements, push registration. |
-| 8. Testing & Deployment | ✅ Done | Integration + e2e test plans, deployment runbook, monitoring config. |
+| 8. Testing & Deployment | ✅ Done | Integration + e2e test plans, deployment runbook, monitoring config. Unit test suite: 111/111 passing (15 new in this milestone for the CSV parser). |
 
 Legend: ✅ done · 🟡 partial · ⏳ not started
 
@@ -80,7 +80,7 @@ pnpm --filter @la-chat/api test                    # ✓ 10/10 tests pass
 ### Not yet done in Phase 2
 
 - ⏳ **MFA for privileged accounts** — schema has `mfa_secret` column; enforcement not implemented.
-- ⏳ **CSV import / export** — `user.import_csv` / `user.export_csv` permissions exist; endpoint not implemented.
+- ✅ **CSV import / export** — `POST /users/import` (multipart file upload, permission `user.import_csv`), `GET /users/import/template`, `GET /users/export` (permission `user.export_csv`). Each row is created in its own transaction so a single bad row never aborts the batch. Students are matched to a class/stream by name; staff require a valid `RoleName`. Blank passwords get an auto-generated temporary password returned in the import result. Web UI at `/admin/import`. 15 new unit tests cover the CSV parser (quoted fields, escaped quotes, CRLF, newlines inside quotes).
 - ⏳ **Device registration** — `devices` table exists and sessions reference it; push-token registration is Phase 4, but there is no user-facing device naming/removal flow beyond session revocation.
 - ⏳ **Self-service password reset** — only the administrative reset exists (no email/SMS delivery channel configured). A self-service flow needs an email or SMS provider.
 - ⏳ **Official logo extraction** — brand palette is a placeholder; needs the real logo asset from the school.
@@ -209,8 +209,8 @@ Verification: empty Postgres volume → 4 migrations applied → seed loaded →
 
 Phases 1–8 are implemented at the API level. The remaining gaps are mostly user-facing and are ordered by risk:
 
-1. **Administration console** (spec §16) — user management (approve/suspend/reset password/CSV import-export), academic management, announcement management and the moderation queue in the web UI. Today these exist only as API endpoints.
-2. **Phase 2 leftovers** — MFA (TOTP) for privileged accounts, CSV import/export endpoints, official logo palette extraction.
+1. **Administration console** (spec §16) — user management (approve/suspend/reset password), academic management, announcement management and the moderation queue in the web UI. CSV import/export has shipped (see Phase 2); the rest remain API-only so far.
+2. **Phase 2 leftovers** — MFA (TOTP) for privileged accounts, official logo palette extraction.
 3. **Phase 3 leftovers** — message forwarding, pinned messages, group management UI (rename/add/remove members/picture/description).
 4. **Message search UI** and shared-document search in the web app.
 5. **Parent portal** — guardian linkage UI and the restricted parent view.

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiFetch, logout, isAuthenticated } from '@/lib/api';
+import { RoleName } from '@la-chat/shared-types';
 import type { UserProfileDto } from '@la-chat/shared-types';
 
 export default function DashboardPage(): React.JSX.Element {
@@ -80,6 +81,14 @@ export default function DashboardPage(): React.JSX.Element {
             {profile?.department && (<><dt>Department</dt><dd>{profile.department}</dd></>)}
           </dl>
         </section>
+
+        {(profile?.roles.includes(RoleName.SCHOOL_ADMINISTRATOR) || profile?.roles.includes(RoleName.ICT_ADMINISTRATOR)) && (
+          <section style={styles.section}>
+            <h2 style={styles.sectionTitle}>Administration</h2>
+            <p style={styles.muted}>Bulk import user accounts from CSV.</p>
+            <Link href="/admin/import" style={styles.chatLink}>Import users →</Link>
+          </section>
+        )}
 
         <section style={styles.section}>
           <h2 style={styles.sectionTitle}>Messaging</h2>

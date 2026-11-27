@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { apiFetch, ApiError, isAuthenticated, logout } from '@/lib/api';
 import type { SessionDto, UserProfileDto } from '@la-chat/shared-types';
 
-export default function ProfilePage() {
+export default function ProfilePage(): React.JSX.Element {
   const router = useRouter();
 
   const [profile, setProfile] = useState<UserProfileDto | null>(null);
